@@ -1,0 +1,4 @@
+flask>=3.0
+
+# Optional: system tray support
+# pip install pystray Pillow
