@@ -1,0 +1,384 @@
+# English translations for Job Tracker.
+# Copyright (C) 2026 Rafael Krause
+# This file is distributed under the same license as the Job Tracker
+# project.
+# Rafael Krause <rafaelkrause@gmail.com>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version:  job-tracker\n"
+"Report-Msgid-Bugs-To: rafaelkrause@gmail.com\n"
+"POT-Creation-Date: 2026-04-19 19:14-0300\n"
+"PO-Revision-Date: 2026-04-19 19:15-0300\n"
+"Last-Translator: Rafael Krause <rafaelkrause@gmail.com>\n"
+"Language: en\n"
+"Language-Team: en <rafaelkrause@gmail.com>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: app/routes.py:121 app/routes.py:206 app/routes.py:460 app/routes.py:504
+msgid "Invalid request body"
+msgstr "Invalid request body"
+
+#: app/routes.py:124 app/routes.py:211
+msgid "Description is required"
+msgstr "Description is required"
+
+#: app/routes.py:129 app/routes.py:216
+#, python-format
+msgid "Description too long (max %(max)d characters)"
+msgstr "Description too long (max %(max)d characters)"
+
+#: app/routes.py:154 app/routes.py:184
+msgid "No active activity"
+msgstr "No active activity"
+
+#: app/routes.py:169
+msgid "No activity to resume"
+msgstr "No activity to resume"
+
+#: app/routes.py:202 app/routes.py:252
+msgid "Activity not found"
+msgstr "Activity not found"
+
+#: app/routes.py:225
+msgid "Invalid start time (HH:MM)"
+msgstr "Invalid start time (HH:MM)"
+
+#: app/routes.py:232
+msgid "Invalid end time (HH:MM)"
+msgstr "Invalid end time (HH:MM)"
+
+#: app/routes.py:291
+msgid "Unsupported language"
+msgstr "Unsupported language"
+
+#: app/routes.py:319 app/routes.py:352
+msgid "Invalid date"
+msgstr "Invalid date"
+
+#: app/routes.py:325 app/routes.py:429
+msgid "Invalid dates"
+msgstr "Invalid dates"
+
+#: app/routes.py:424
+msgid "Parameters 'from' and 'to' are required"
+msgstr "Parameters 'from' and 'to' are required"
+
+#: app/routes.py:431
+msgid "Maximum export range: 1 year"
+msgstr "Maximum export range: 1 year"
+
+#: app/routes.py:433
+msgid "Invalid format (csv or tsv)"
+msgstr "Invalid format (csv or tsv)"
+
+#: app/routes.py:475
+msgid "Invalid target percentage"
+msgstr "Invalid target percentage"
+
+#: app/routes.py:480
+msgid "Invalid port (1024-65535)"
+msgstr "Invalid port (1024-65535)"
+
+#: app/routes.py:482
+msgid "Invalid port"
+msgstr "Invalid port"
+
+#: app/routes.py:486
+msgid "Invalid theme"
+msgstr "Invalid theme"
+
+#: app/routes.py:510
+#, python-format
+msgid "Invalid shifts for %(day)s"
+msgstr "Invalid shifts for %(day)s"
+
+#: app/routes.py:514
+#, python-format
+msgid "Invalid shift in %(day)s"
+msgstr "Invalid shift in %(day)s"
+
+#: app/routes.py:518
+#, python-format
+msgid "Invalid time in %(day)s"
+msgstr "Invalid time in %(day)s"
+
+#: app/templates/base.html:20 app/templates/dashboard.html:2
+msgid "Dashboard"
+msgstr "Dashboard"
+
+#: app/templates/base.html:23 app/templates/settings.html:2
+#: app/templates/settings.html:5
+msgid "Settings"
+msgstr "Settings"
+
+#: app/templates/base.html:26
+msgid "Language"
+msgstr "Language"
+
+#: app/templates/base.html:35
+msgid "Toggle theme"
+msgstr "Toggle theme"
+
+#: app/templates/base.html:49 app/templates/dashboard.html:13
+msgid "Active"
+msgstr "Active"
+
+#: app/templates/base.html:50
+msgid "Paused"
+msgstr "Paused"
+
+#: app/templates/base.html:51
+msgid "Completed"
+msgstr "Completed"
+
+#: app/templates/base.html:52
+msgid "Today"
+msgstr "Today"
+
+#: app/templates/base.html:53
+msgid "No shift"
+msgstr "No shift"
+
+#: app/templates/base.html:54
+msgid "No activities recorded"
+msgstr "No activities recorded"
+
+#: app/templates/base.html:55 app/templates/dashboard.html:115
+msgid "Loading..."
+msgstr "Loading..."
+
+#: app/templates/base.html:56
+msgid "Activity updated!"
+msgstr "Activity updated!"
+
+#: app/templates/base.html:57
+msgid "Activity removed."
+msgstr "Activity removed."
+
+#: app/templates/base.html:58
+msgid "Shifts saved!"
+msgstr "Shifts saved!"
+
+#: app/templates/base.html:59
+msgid "Settings saved!"
+msgstr "Settings saved!"
+
+#: app/templates/base.html:60
+msgid "Select the dates."
+msgstr "Select the dates."
+
+#: app/templates/base.html:61
+msgid "now"
+msgstr "now"
+
+#: app/templates/base.html:62
+msgid "Monday"
+msgstr "Monday"
+
+#: app/templates/base.html:63
+msgid "Tuesday"
+msgstr "Tuesday"
+
+#: app/templates/base.html:64
+msgid "Wednesday"
+msgstr "Wednesday"
+
+#: app/templates/base.html:65
+msgid "Thursday"
+msgstr "Thursday"
+
+#: app/templates/base.html:66
+msgid "Friday"
+msgstr "Friday"
+
+#: app/templates/base.html:67
+msgid "Saturday"
+msgstr "Saturday"
+
+#: app/templates/base.html:68
+msgid "Sunday"
+msgstr "Sunday"
+
+#: app/templates/dashboard.html:6
+#, python-format
+msgid "Hello, %(name)s!"
+msgstr "Hello, %(name)s!"
+
+#: app/templates/dashboard.html:19
+msgid "Pause"
+msgstr "Pause"
+
+#: app/templates/dashboard.html:22
+msgid "Resume"
+msgstr "Resume"
+
+#: app/templates/dashboard.html:25
+msgid "Stop"
+msgstr "Stop"
+
+#: app/templates/dashboard.html:36
+msgid "Activity description..."
+msgstr "Activity description..."
+
+#: app/templates/dashboard.html:38 app/templates/dashboard.html:107
+#: app/templates/dashboard.html:138
+msgid "Start"
+msgstr "Start"
+
+#: app/templates/dashboard.html:58
+msgid "Tracked"
+msgstr "Tracked"
+
+#: app/templates/dashboard.html:62
+msgid "Shift"
+msgstr "Shift"
+
+#: app/templates/dashboard.html:66
+msgid "Target"
+msgstr "Target"
+
+#: app/templates/dashboard.html:80
+msgid "Timeline"
+msgstr "Timeline"
+
+#: app/templates/dashboard.html:92
+msgid "Activities"
+msgstr "Activities"
+
+#: app/templates/dashboard.html:94
+msgid "Export CSV"
+msgstr "Export CSV"
+
+#: app/templates/dashboard.html:97
+msgid "Export TSV (copy/paste)"
+msgstr "Export TSV (copy/paste)"
+
+#: app/templates/dashboard.html:106 app/templates/dashboard.html:133
+msgid "Description"
+msgstr "Description"
+
+#: app/templates/dashboard.html:108 app/templates/dashboard.html:142
+msgid "End"
+msgstr "End"
+
+#: app/templates/dashboard.html:109
+msgid "Duration"
+msgstr "Duration"
+
+#: app/templates/dashboard.html:110
+msgid "Status"
+msgstr "Status"
+
+#: app/templates/dashboard.html:126
+msgid "Edit Activity"
+msgstr "Edit Activity"
+
+#: app/templates/dashboard.html:149 app/templates/dashboard.html:192
+msgid "Remove"
+msgstr "Remove"
+
+#: app/templates/dashboard.html:152 app/templates/dashboard.html:190
+msgid "Cancel"
+msgstr "Cancel"
+
+#: app/templates/dashboard.html:154 app/templates/settings.html:50
+msgid "Save"
+msgstr "Save"
+
+#: app/templates/dashboard.html:168
+msgid "Confirm changes?"
+msgstr "Confirm changes?"
+
+#: app/templates/dashboard.html:171
+msgid "Back"
+msgstr "Back"
+
+#: app/templates/dashboard.html:173
+msgid "Confirm"
+msgstr "Confirm"
+
+#: app/templates/dashboard.html:186
+msgid "Remove this activity?"
+msgstr "Remove this activity?"
+
+#: app/templates/dashboard.html:187
+msgid "This action cannot be undone."
+msgstr "This action cannot be undone."
+
+#: app/templates/focus.html:14
+msgid "Opening Job Tracker..."
+msgstr "Opening Job Tracker..."
+
+#: app/templates/focus.html:16
+msgid "Job Tracker is already open in another tab."
+msgstr "Job Tracker is already open in another tab."
+
+#: app/templates/focus.html:17
+msgid "You can close this tab."
+msgstr "You can close this tab."
+
+#: app/templates/settings.html:9
+msgid "Work Shifts"
+msgstr "Work Shifts"
+
+#: app/templates/settings.html:13
+msgid "Save Shifts"
+msgstr "Save Shifts"
+
+#: app/templates/settings.html:20
+msgid "General"
+msgstr "General"
+
+#: app/templates/settings.html:24
+msgid "Your name"
+msgstr "Your name"
+
+#: app/templates/settings.html:26
+msgid "e.g. Maria"
+msgstr "e.g. Maria"
+
+#: app/templates/settings.html:29
+msgid "Target percentage"
+msgstr "Target percentage"
+
+#: app/templates/settings.html:34
+msgid "Server port"
+msgstr "Server port"
+
+#: app/templates/settings.html:37
+msgid "Requires restart"
+msgstr "Requires restart"
+
+#: app/templates/settings.html:44
+msgid "Show casual phrases when pausing and stopping activities"
+msgstr "Show casual phrases when pausing and stopping activities"
+
+#: app/templates/settings.html:57
+msgid "Export Data"
+msgstr "Export Data"
+
+#: app/templates/settings.html:61
+msgid "From"
+msgstr "From"
+
+#: app/templates/settings.html:65
+msgid "To"
+msgstr "To"
+
+#: app/templates/settings.html:69
+msgid "Format"
+msgstr "Format"
+
+#: app/templates/settings.html:72
+msgid "TSV (Tab)"
+msgstr "TSV (Tab)"
+
+#: app/templates/settings.html:77
+msgid "Export"
+msgstr "Export"
+
