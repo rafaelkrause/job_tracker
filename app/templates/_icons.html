@@ -1,0 +1,4 @@
+{% macro icon(name, class='icon') -%}
+{%- set svg_path = 'icons/' ~ name ~ '.svg' -%}
+{%- include svg_path ignore missing -%}
+{%- endmacro %}
