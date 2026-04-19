@@ -93,6 +93,11 @@ unzip -q -o "$NSSM_ZIP" -d "$CACHE_DIR/nssm-tmp"
 mkdir -p "$BUILD_DIR/nssm"
 cp "$CACHE_DIR/nssm-tmp/nssm-${NSSM_VER}/win64/nssm.exe" "$BUILD_DIR/nssm/nssm.exe"
 
+# ------------------------------------------------------------------ translation catalogs
+log "Compiling translation catalogs..."
+python3 -m pip install --quiet --disable-pip-version-check babel
+python3 -m babel.messages.frontend compile -d "$REPO_ROOT/app/i18n"
+
 # ------------------------------------------------------------------ app source
 log "Staging application source..."
 mkdir -p "$BUILD_DIR/app"
