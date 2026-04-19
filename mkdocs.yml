@@ -1,0 +1,97 @@
+site_name: Job Tracker
+site_description: Self-hosted hour-tracking tool with local web UI
+site_url: https://rafaelkrause.github.io/job_tracker/
+repo_url: https://github.com/rafaelkrause/job_tracker
+repo_name: rafaelkrause/job_tracker
+edit_uri: edit/main/docs-src/
+copyright: Copyright © 2026 Rafael Krause — MIT License
+
+docs_dir: docs-src
+
+theme:
+  name: material
+  language: pt-BR
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Modo escuro / Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Modo claro / Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.footer
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.action.edit
+    - toc.follow
+  icon:
+    repo: fontawesome/brands/github
+
+plugins:
+  - search
+  - i18n:
+      docs_structure: suffix
+      fallback_to_default: true
+      languages:
+        - locale: pt-BR
+          default: true
+          name: Português (Brasil)
+          build: true
+        - locale: en
+          name: English
+          build: true
+          nav_translations:
+            Início: Home
+            Instalação: Installation
+            Configuração: Configuration
+            Guia do usuário: User Guide
+            API: API Reference
+            Solução de problemas: Troubleshooting
+            Contribuindo: Contributing
+            Idioma: Language
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+
+nav:
+  - Início: index.md
+  - Instalação: installation.md
+  - Configuração: configuration.md
+  - Guia do usuário: user-guide.md
+  - API: api.md
+  - Solução de problemas: troubleshooting.md
+  - Contribuindo: contributing.md
+  - Idioma: language.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/rafaelkrause/job_tracker
