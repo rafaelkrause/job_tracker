@@ -53,7 +53,7 @@ function formatDateISO(d) {
 function formatTime(isoStr) {
     if (!isoStr) return "—";
     const d = new Date(isoStr);
-    return d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    return d.toLocaleTimeString(window.currentLang || "pt-BR", { hour: "2-digit", minute: "2-digit" });
 }
 
 function formatDuration(seconds) {
@@ -113,6 +113,23 @@ document.addEventListener("click", (e) => {
     }
 });
 
+// ── Language switch ───────────────────────────────────────────────────
+
+document.addEventListener("click", async (e) => {
+    const el = e.target.closest(".lang-switch");
+    if (!el) return;
+    e.preventDefault();
+    const lang = el.dataset.lang;
+    try {
+        await fetch("/api/lang", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ lang }),
+        });
+        window.location.reload();
+    } catch { /* ignore */ }
+});
+
 // ── Current Activity ──────────────────────────────────────────────────
 
 async function refreshCurrentActivity() {
@@ -130,13 +147,13 @@ async function refreshCurrentActivity() {
         const btnResume = document.getElementById("btn-resume");
 
         if (data.activity.status === "paused") {
-            badge.textContent = "Pausado";
+            badge.textContent = window.i18n.paused;
             badge.className = "badge bg-warning text-dark";
             btnPause.classList.add("d-none");
             btnResume.classList.remove("d-none");
             container.classList.add("border-warning");
         } else {
-            badge.textContent = "Ativo";
+            badge.textContent = window.i18n.active;
             badge.className = "badge bg-success";
             btnPause.classList.remove("d-none");
             btnResume.classList.add("d-none");
@@ -238,9 +255,9 @@ function updateDateDisplay() {
     const todayStr = formatDateISO(new Date());
     const currentStr = formatDateISO(currentDate);
     if (currentStr === todayStr) {
-        el.textContent = "Hoje";
+        el.textContent = window.i18n.today;
     } else {
-        el.textContent = currentDate.toLocaleDateString("pt-BR", {
+        el.textContent = currentDate.toLocaleDateString(window.currentLang || "pt-BR", {
             weekday: "short", day: "2-digit", month: "2-digit",
         });
     }
@@ -283,7 +300,7 @@ async function refreshDashboard() {
     if (shiftInfo) {
         shiftInfo.textContent = data.shifts.length > 0
             ? data.shifts.map(s => `${s.start}\u2013${s.end}`).join(" | ")
-            : "Sem turno";
+            : window.i18n.no_shift;
     }
 
     renderTimeline(data);
@@ -300,7 +317,7 @@ function renderTimeline(data) {
     if (labelsEl) labelsEl.innerHTML = "";
 
     if (data.shifts.length === 0) {
-        container.innerHTML = '<div class="text-body-secondary text-center small py-3">Sem turno configurado</div>';
+        container.innerHTML = `<div class="text-body-secondary text-center small py-3">${escapeHtml(window.i18n.no_shift)}</div>`;
         container.style.height = "auto";
         return;
     }
@@ -353,7 +370,7 @@ function renderTimeline(data) {
         div.className = `timeline-activity ${a.status}`;
         div.style.left = `${left}%`;
         div.style.width = `${Math.max(0.3, right - left)}%`;
-        div.title = `${a.description}\n${formatTime(a.started_at)} \u2013 ${a.ended_at ? formatTime(a.ended_at) : "agora"}\n${a.effective_duration}`;
+        div.title = `${a.description}\n${formatTime(a.started_at)} \u2013 ${a.ended_at ? formatTime(a.ended_at) : window.i18n.now}\n${a.effective_duration}`;
         container.appendChild(div);
     }
 
@@ -389,14 +406,14 @@ function renderActivityTable(activities) {
     if (!tbody) return;
 
     if (activities.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-body-secondary py-3">Nenhuma atividade registrada</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-body-secondary py-3">${escapeHtml(window.i18n.no_activities)}</td></tr>`;
         return;
     }
 
     const statusMap = {
-        completed: { label: "Finalizado", cls: "bg-secondary" },
-        paused:    { label: "Pausado",    cls: "bg-warning text-dark" },
-        active:    { label: "Ativo",      cls: "bg-success" },
+        completed: { label: window.i18n.completed, cls: "bg-secondary" },
+        paused:    { label: window.i18n.paused,    cls: "bg-warning text-dark" },
+        active:    { label: window.i18n.active,    cls: "bg-success" },
     };
 
     tbody.innerHTML = activities.map(a => {
@@ -411,7 +428,7 @@ function renderActivityTable(activities) {
                 <button class="btn btn-link btn-sm p-0 text-body-secondary btn-edit"
                     data-id="${a.id}" data-status="${a.status}"
                     data-started="${a.started_at}" data-ended="${a.ended_at || ""}"
-                    title="Editar">
+                    title="${escapeHtml(window.i18n.edit || 'Edit')}">
                     <i class="bi bi-pencil"></i>
                 </button>
             </td>
@@ -496,7 +513,7 @@ async function saveEdit() {
     refreshCurrentActivity();
     refreshDashboard();
     notifyOtherTabs();
-    showToast("Atividade atualizada!");
+    showToast(window.i18n.activity_updated);
 }
 
 async function deleteActivity() {
@@ -506,7 +523,7 @@ async function deleteActivity() {
     refreshCurrentActivity();
     refreshDashboard();
     notifyOtherTabs();
-    showToast("Atividade removida.");
+    showToast(window.i18n.activity_removed);
 }
 
 // ── Export ─────────────────────────────────────────────────────────────
@@ -518,10 +535,17 @@ function exportData(format) {
 
 // ── Settings ──────────────────────────────────────────────────────────
 
-const DAY_NAMES = {
-    monday: "Segunda", tuesday: "Ter\u00e7a", wednesday: "Quarta",
-    thursday: "Quinta", friday: "Sexta", saturday: "S\u00e1bado", sunday: "Domingo",
-};
+function dayNames() {
+    return {
+        monday: window.i18n.monday,
+        tuesday: window.i18n.tuesday,
+        wednesday: window.i18n.wednesday,
+        thursday: window.i18n.thursday,
+        friday: window.i18n.friday,
+        saturday: window.i18n.saturday,
+        sunday: window.i18n.sunday,
+    };
+}
 const DAY_ORDER = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 
 async function loadShifts() {
@@ -530,13 +554,14 @@ async function loadShifts() {
     if (!container) return;
 
     container.innerHTML = "";
+    const names = dayNames();
     for (const day of DAY_ORDER) {
         const shifts = data[day] || [];
         const dayDiv = document.createElement("div");
         dayDiv.className = "mb-3";
         dayDiv.innerHTML = `
             <div class="d-flex align-items-center gap-2 mb-1">
-                <strong style="width:75px;font-size:0.85rem">${DAY_NAMES[day]}</strong>
+                <strong style="width:75px;font-size:0.85rem">${escapeHtml(names[day])}</strong>
                 <button class="btn btn-outline-primary btn-sm py-0 px-1" style="font-size:0.75rem" onclick="addShift('${day}')">
                     <i class="bi bi-plus"></i>
                 </button>
@@ -578,7 +603,7 @@ async function saveShifts() {
         }
     }
     await api("/api/shifts", "PUT", shifts);
-    showToast("Turnos salvos!");
+    showToast(window.i18n.shifts_saved);
 }
 
 async function saveGeneral() {
@@ -592,7 +617,7 @@ async function saveGeneral() {
         port,
         phrases_enabled: phrasesEnabled,
     });
-    showToast("Configura\u00e7\u00f5es salvas!");
+    showToast(window.i18n.settings_saved);
 }
 
 function exportFromSettings() {
@@ -600,7 +625,7 @@ function exportFromSettings() {
     const to = document.getElementById("export-to")?.value;
     const format = document.getElementById("export-format")?.value || "csv";
     if (!from || !to) {
-        showToast("Selecione as datas.", "warning");
+        showToast(window.i18n.pick_dates, "warning");
         return;
     }
     window.open(`/api/export?from=${from}&to=${to}&format=${format}`);

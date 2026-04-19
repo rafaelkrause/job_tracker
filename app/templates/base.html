@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-bs-theme="light">
+<html lang="{{ current_lang }}" data-bs-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,12 +17,22 @@
             </a>
             <div class="d-flex align-items-center gap-2">
                 <a class="btn btn-sm {% if request.path == '/' %}btn-primary{% else %}btn-outline-secondary{% endif %}"
-                   href="/">Dashboard</a>
+                   href="/">{{ _('Dashboard') }}</a>
                 <a class="btn btn-sm {% if request.path == '/settings' %}btn-primary{% else %}btn-outline-secondary{% endif %}"
                    href="/settings">
-                    <i class="bi bi-gear"></i> Config
+                    <i class="bi bi-gear"></i> {{ _('Settings') }}
                 </a>
-                <button class="btn btn-sm btn-outline-secondary" id="theme-toggle" title="Alternar tema">
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="{{ _('Language') }}">
+                        <i class="bi bi-translate"></i>
+                        <span class="d-none d-sm-inline">{{ current_lang.upper() }}</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item lang-switch" data-lang="pt_BR" href="#">Português (Brasil)</a></li>
+                        <li><a class="dropdown-item lang-switch" data-lang="en" href="#">English</a></li>
+                    </ul>
+                </div>
+                <button class="btn btn-sm btn-outline-secondary" id="theme-toggle" title="{{ _('Toggle theme') }}">
                     <i class="bi bi-circle-half"></i>
                 </button>
             </div>
@@ -33,6 +43,31 @@
         {% block content %}{% endblock %}
     </main>
 
+    <script>
+      window.currentLang = "{{ current_lang }}";
+      window.i18n = {
+        active: "{{ _('Active') }}",
+        paused: "{{ _('Paused') }}",
+        completed: "{{ _('Completed') }}",
+        today: "{{ _('Today') }}",
+        no_shift: "{{ _('No shift') }}",
+        no_activities: "{{ _('No activities recorded') }}",
+        loading: "{{ _('Loading...') }}",
+        activity_updated: "{{ _('Activity updated!') }}",
+        activity_removed: "{{ _('Activity removed.') }}",
+        shifts_saved: "{{ _('Shifts saved!') }}",
+        settings_saved: "{{ _('Settings saved!') }}",
+        pick_dates: "{{ _('Select the dates.') }}",
+        now: "{{ _('now') }}",
+        monday: "{{ _('Monday') }}",
+        tuesday: "{{ _('Tuesday') }}",
+        wednesday: "{{ _('Wednesday') }}",
+        thursday: "{{ _('Thursday') }}",
+        friday: "{{ _('Friday') }}",
+        saturday: "{{ _('Saturday') }}",
+        sunday: "{{ _('Sunday') }}"
+      };
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
     {% block scripts %}{% endblock %}
