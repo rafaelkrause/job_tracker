@@ -1,80 +1,79 @@
 {% extends "base.html" %}
 {% block title %}{{ _('Settings') }} — Job Tracker{% endblock %}
 {% block content %}
+{% from "_icons.html" import icon %}
 
 <h5 class="mb-3">{{ _('Settings') }}</h5>
 
 <!-- Shifts -->
 <div class="card mb-3">
-    <div class="card-header py-2"><small class="fw-semibold">{{ _('Work Shifts') }}</small></div>
-    <div class="card-body">
+    <div class="card__header"><small class="font-semibold">{{ _('Work Shifts') }}</small></div>
+    <div class="card__body">
         <div id="shifts-config"></div>
-        <button class="btn btn-primary btn-sm mt-3" onclick="saveShifts()">
-            <i class="bi bi-check-lg"></i> {{ _('Save Shifts') }}
+        <button class="btn btn--primary btn--sm mt-3" onclick="saveShifts()">
+            {{ icon('check') }} {{ _('Save Shifts') }}
         </button>
     </div>
 </div>
 
 <!-- General -->
 <div class="card mb-3">
-    <div class="card-header py-2"><small class="fw-semibold">{{ _('General') }}</small></div>
-    <div class="card-body">
-        <div class="row g-3">
-            <div class="col-auto">
-                <label class="form-label small">{{ _('Your name') }}</label>
-                <input type="text" class="form-control form-control-sm" id="user-name"
+    <div class="card__header"><small class="font-semibold">{{ _('General') }}</small></div>
+    <div class="card__body">
+        <div class="flex flex-wrap items-end gap-3">
+            <div>
+                <label class="label">{{ _('Your name') }}</label>
+                <input type="text" class="input" id="user-name"
                        value="{{ config.get('user_name', '') }}" placeholder="{{ _('e.g. Maria') }}" style="width:180px" maxlength="100">
             </div>
-            <div class="col-auto">
-                <label class="form-label small">{{ _('Target percentage') }} (%)</label>
-                <input type="number" class="form-control form-control-sm" id="target-percentage"
+            <div>
+                <label class="label">{{ _('Target percentage') }} (%)</label>
+                <input type="number" class="input" id="target-percentage"
                        min="0" max="100" value="{{ config.get('target_percentage', 90) }}" style="width:100px">
             </div>
-            <div class="col-auto">
-                <label class="form-label small">{{ _('Server port') }}</label>
-                <input type="number" class="form-control form-control-sm" id="server-port"
+            <div>
+                <label class="label">{{ _('Server port') }}</label>
+                <input type="number" class="input" id="server-port"
                        value="{{ config.get('port', 5000) }}" style="width:100px">
-                <small class="text-body-secondary">{{ _('Requires restart') }}</small>
-            </div>
-            <div class="col-12">
-                <div class="form-check">
-                    <input type="checkbox" class="form-check-input" id="phrases-enabled"
-                           {% if config.get('phrases_enabled', True) %}checked{% endif %}>
-                    <label class="form-check-label small" for="phrases-enabled">
-                        {{ _('Show casual phrases when pausing and stopping activities') }}
-                    </label>
-                </div>
+                <small class="text-muted d-block">{{ _('Requires restart') }}</small>
             </div>
         </div>
-        <button class="btn btn-primary btn-sm mt-3" onclick="saveGeneral()">
-            <i class="bi bi-check-lg"></i> {{ _('Save') }}
+        <div class="flex items-center gap-2 mt-3">
+            <input type="checkbox" class="checkbox" id="phrases-enabled"
+                   {% if config.get('phrases_enabled', True) %}checked{% endif %}>
+            <label class="label" for="phrases-enabled" style="margin-bottom:0;">
+                {{ _('Show casual phrases when pausing and stopping activities') }}
+            </label>
+        </div>
+        <button class="btn btn--primary btn--sm mt-3" onclick="saveGeneral()">
+            {{ icon('check') }} {{ _('Save') }}
         </button>
     </div>
 </div>
 
 <!-- Export -->
 <div class="card mb-3">
-    <div class="card-header py-2"><small class="fw-semibold">{{ _('Export Data') }}</small></div>
-    <div class="card-body">
-        <div class="row g-2 align-items-end">
-            <div class="col-auto">
-                <label class="form-label small">{{ _('From') }}</label>
-                <input type="date" class="form-control form-control-sm" id="export-from">
+    <div class="card__header"><small class="font-semibold">{{ _('Export Data') }}</small></div>
+    <div class="card__body">
+        <div class="flex flex-wrap items-end gap-2">
+            <div>
+                <label class="label">{{ _('From') }}</label>
+                <input type="date" class="input" id="export-from">
             </div>
-            <div class="col-auto">
-                <label class="form-label small">{{ _('To') }}</label>
-                <input type="date" class="form-control form-control-sm" id="export-to">
+            <div>
+                <label class="label">{{ _('To') }}</label>
+                <input type="date" class="input" id="export-to">
             </div>
-            <div class="col-auto">
-                <label class="form-label small">{{ _('Format') }}</label>
-                <select class="form-select form-select-sm" id="export-format">
+            <div>
+                <label class="label">{{ _('Format') }}</label>
+                <select class="select" id="export-format">
                     <option value="csv">CSV</option>
                     <option value="tsv">{{ _('TSV (Tab)') }}</option>
                 </select>
             </div>
-            <div class="col-auto">
-                <button class="btn btn-primary btn-sm" onclick="exportFromSettings()">
-                    <i class="bi bi-download"></i> {{ _('Export') }}
+            <div>
+                <button class="btn btn--primary btn--sm" onclick="exportFromSettings()">
+                    {{ icon('download') }} {{ _('Export') }}
                 </button>
             </div>
         </div>
