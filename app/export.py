@@ -33,13 +33,15 @@ def export_activities(
     for a in activities:
         if a.status != "completed":
             continue
-        writer.writerow([
-            _format_date(a.started_at),
-            a.description,
-            _format_time(a.started_at),
-            _format_time(a.ended_at) if a.ended_at else "",
-            a.effective_duration_formatted(),
-        ])
+        writer.writerow(
+            [
+                _format_date(a.started_at),
+                a.description,
+                _format_time(a.started_at),
+                _format_time(a.ended_at) if a.ended_at else "",
+                a.effective_duration_formatted(),
+            ]
+        )
 
     filename = f"horas_{from_date.strftime('%Y%m%d')}_{to_date.strftime('%Y%m%d')}.{ext}"
     return output.getvalue(), mimetype, filename

@@ -1,6 +1,7 @@
 import os
-from flask import Flask
 from pathlib import Path
+
+from flask import Flask
 
 
 def get_user_data_dir() -> Path:
@@ -31,9 +32,11 @@ def create_app(config: dict | None = None):
 
     # Cleanup data files older than 12 months
     from app.storage import Storage
+
     Storage(app.config["DATA_DIR"]).cleanup_old_data()
 
     from app.routes import bp
+
     app.register_blueprint(bp)
 
     return app

@@ -1,10 +1,10 @@
+import contextlib
 import json
 import os
 import sys
 import tempfile
 from datetime import date, datetime, timedelta
 from pathlib import Path
-from typing import Optional
 
 from app.models import Activity
 
@@ -30,10 +30,8 @@ def _atomic_write_json(path: Path, data: dict):
             finally:
                 os.close(dir_fd)
     except BaseException:
-        try:
+        with contextlib.suppress(OSError):
             os.unlink(tmp_path)
-        except OSError:
-            pass
         raise
 
 
@@ -81,7 +79,7 @@ class Storage:
             activities.append(activity.to_dict())
         self._save_file(path, activities)
 
-    def get_current_activity(self) -> Optional[Activity]:
+    def get_current_activity(self) -> Activity | None:
         """Find any active or paused activity in recent months."""
         today = date.today()
         for month_offset in range(3):
@@ -97,7 +95,7 @@ class Storage:
                     return Activity.from_dict(a)
         return None
 
-    def find_activity(self, activity_id: str) -> Optional[Activity]:
+    def find_activity(self, activity_id: str) -> Activity | None:
         """Find an activity by ID across all monthly files."""
         for path in sorted(self.data_dir.glob("*.json"), reverse=True):
             for a in self._load_file(path):

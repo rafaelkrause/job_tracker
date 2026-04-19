@@ -1,13 +1,12 @@
+import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional
-import uuid
 
 
 @dataclass
 class Pause:
     paused_at: str
-    resumed_at: Optional[str] = None
+    resumed_at: str | None = None
 
     def duration_seconds(self) -> float:
         start = datetime.fromisoformat(self.paused_at)
@@ -35,7 +34,7 @@ class Activity:
     description: str
     started_at: str
     status: str  # "active", "paused", "completed"
-    ended_at: Optional[str] = None
+    ended_at: str | None = None
     pauses: list[Pause] = field(default_factory=list)
 
     @staticmethod
@@ -50,9 +49,7 @@ class Activity:
     def pause(self):
         if self.status != "active":
             raise ValueError("Can only pause an active activity")
-        self.pauses.append(
-            Pause(paused_at=datetime.now().astimezone().isoformat())
-        )
+        self.pauses.append(Pause(paused_at=datetime.now().astimezone().isoformat()))
         self.status = "paused"
 
     def resume(self):
@@ -73,9 +70,7 @@ class Activity:
     def effective_duration_seconds(self) -> float:
         start = datetime.fromisoformat(self.started_at)
         end = (
-            datetime.fromisoformat(self.ended_at)
-            if self.ended_at
-            else datetime.now().astimezone()
+            datetime.fromisoformat(self.ended_at) if self.ended_at else datetime.now().astimezone()
         )
         total = (end - start).total_seconds()
         pause_total = sum(p.duration_seconds() for p in self.pauses)

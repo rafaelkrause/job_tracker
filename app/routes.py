@@ -48,6 +48,7 @@ def _parse_date(s: str) -> date | None:
     except (ValueError, TypeError):
         return None
 
+
 # Monotonic counter bumped on every state-changing action (start/pause/resume/stop).
 # Browser tabs poll this to detect changes made from other sources (tray, other tabs).
 _state_revision = 0
@@ -99,11 +100,13 @@ def get_current():
     storage = get_storage()
     activity = storage.get_current_activity()
     if activity:
-        return jsonify({
-            "activity": activity.to_dict(),
-            "effective_duration": activity.effective_duration_formatted(),
-            "effective_seconds": activity.effective_duration_seconds(),
-        })
+        return jsonify(
+            {
+                "activity": activity.to_dict(),
+                "effective_duration": activity.effective_duration_formatted(),
+                "effective_seconds": activity.effective_duration_seconds(),
+            }
+        )
     return jsonify({"activity": None})
 
 
@@ -116,7 +119,9 @@ def start_activity():
     if not description:
         return jsonify({"error": "Descrição é obrigatória"}), 400
     if len(description) > MAX_DESCRIPTION_LEN:
-        return jsonify({"error": f"Descrição muito longa (máx {MAX_DESCRIPTION_LEN} caracteres)"}), 400
+        return jsonify(
+            {"error": f"Descrição muito longa (máx {MAX_DESCRIPTION_LEN} caracteres)"}
+        ), 400
 
     storage = get_storage()
 
@@ -196,7 +201,9 @@ def update_activity(activity_id):
         if not desc:
             return jsonify({"error": "Descrição é obrigatória"}), 400
         if len(desc) > MAX_DESCRIPTION_LEN:
-            return jsonify({"error": f"Descrição muito longa (máx {MAX_DESCRIPTION_LEN} caracteres)"}), 400
+            return jsonify(
+                {"error": f"Descrição muito longa (máx {MAX_DESCRIPTION_LEN} caracteres)"}
+            ), 400
         activity.description = desc
 
     if "start_time" in data:
@@ -215,11 +222,13 @@ def update_activity(activity_id):
 
     storage.save_activity(activity)
     _bump_revision()
-    return jsonify({
-        "activity": activity.to_dict(),
-        "effective_duration": activity.effective_duration_formatted(),
-        "effective_seconds": activity.effective_duration_seconds(),
-    })
+    return jsonify(
+        {
+            "activity": activity.to_dict(),
+            "effective_duration": activity.effective_duration_formatted(),
+            "effective_seconds": activity.effective_duration_seconds(),
+        }
+    )
 
 
 @bp.route("/api/activity/<activity_id>", methods=["DELETE"])
@@ -289,16 +298,18 @@ def list_activities():
     else:
         activities = storage.get_activities_for_date(date.today())
 
-    return jsonify({
-        "activities": [
-            {
-                **a.to_dict(),
-                "effective_duration": a.effective_duration_formatted(),
-                "effective_seconds": a.effective_duration_seconds(),
-            }
-            for a in activities
-        ]
-    })
+    return jsonify(
+        {
+            "activities": [
+                {
+                    **a.to_dict(),
+                    "effective_duration": a.effective_duration_formatted(),
+                    "effective_seconds": a.effective_duration_seconds(),
+                }
+                for a in activities
+            ]
+        }
+    )
 
 
 # ── Dashboard data ─────────────────────────────────────────────────────
@@ -346,29 +357,29 @@ def dashboard_data():
 
     tracked_seconds = sum(a.effective_duration_seconds() for a in activities)
 
-    percentage = (
-        (tracked_seconds / elapsed_shift_seconds * 100) if elapsed_shift_seconds > 0 else 0
-    )
+    percentage = (tracked_seconds / elapsed_shift_seconds * 100) if elapsed_shift_seconds > 0 else 0
     target = config.get("target_percentage", 90)
 
-    return jsonify({
-        "date": dt.isoformat(),
-        "day_name": day_name,
-        "activities": [
-            {
-                **a.to_dict(),
-                "effective_duration": a.effective_duration_formatted(),
-                "effective_seconds": a.effective_duration_seconds(),
-            }
-            for a in activities
-        ],
-        "shifts": shifts,
-        "total_shift_seconds": total_shift_seconds,
-        "elapsed_shift_seconds": elapsed_shift_seconds,
-        "tracked_seconds": tracked_seconds,
-        "percentage": round(percentage, 1),
-        "target_percentage": target,
-    })
+    return jsonify(
+        {
+            "date": dt.isoformat(),
+            "day_name": day_name,
+            "activities": [
+                {
+                    **a.to_dict(),
+                    "effective_duration": a.effective_duration_formatted(),
+                    "effective_seconds": a.effective_duration_seconds(),
+                }
+                for a in activities
+            ],
+            "shifts": shifts,
+            "total_shift_seconds": total_shift_seconds,
+            "elapsed_shift_seconds": elapsed_shift_seconds,
+            "tracked_seconds": tracked_seconds,
+            "percentage": round(percentage, 1),
+            "target_percentage": target,
+        }
+    )
 
 
 # ── Export ──────────────────────────────────────────────────────────────
@@ -442,9 +453,8 @@ def update_config():
                 return jsonify({"error": "Porta inválida"}), 400
         elif key == "phrases_enabled":
             val = bool(val)
-        elif key == "theme":
-            if val not in ("auto", "light", "dark"):
-                return jsonify({"error": "Tema inválido"}), 400
+        elif key == "theme" and val not in ("auto", "light", "dark"):
+            return jsonify({"error": "Tema inválido"}), 400
         config[key] = val
 
     save_config(config, current_app.config["CONFIG_PATH"])

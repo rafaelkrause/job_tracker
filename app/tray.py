@@ -1,4 +1,5 @@
 """System tray integration (optional — requires pystray and Pillow)."""
+
 import json
 import os
 import sys
@@ -20,10 +21,12 @@ def start_tray(url: str, app):
 
     def open_browser(icon, item):
         import webbrowser
+
         webbrowser.open(f"{url}/focus")
 
     def _api_post(endpoint):
         """Run HTTP POST in a thread so the tray menu doesn't block."""
+
         def _do():
             try:
                 req = urllib.request.Request(

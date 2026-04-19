@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Entry point for the Job Tracker application."""
+
 import sys
 import threading
 import webbrowser
@@ -21,6 +22,7 @@ def main():
     try:
         import pystray  # noqa: F401
         from PIL import Image  # noqa: F401
+
         tray_available = True
     except ImportError:
         pass

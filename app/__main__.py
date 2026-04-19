@@ -1,5 +1,6 @@
 """CLI entry point. Delegates to run.py's main() so `python -m app` and the
 `job-tracker` script both work identically to `python run.py`."""
+
 from __future__ import annotations
 
 import sys
