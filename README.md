@@ -2,7 +2,7 @@
 
 A lightweight, self-hosted hour-tracking tool that runs as a background process and serves a local web UI at `http://localhost:5000`. Built for single-user, low-footprint use on Linux and Windows. The UI is in Brazilian Portuguese (pt-BR); exports are formatted for manual paste into iClips.
 
-📘 **Documentation:** [GitHub Pages](https://rafaelkrause.github.io/job_tracker/) · [Wiki](./wiki/) · [English](https://rafaelkrause.github.io/job_tracker/en/)
+📘 **Documentation / Documentação:** [rafaelkrause.github.io/job_tracker](https://rafaelkrause.github.io/job_tracker/) (pt-BR + English)
 
 ## Features
 

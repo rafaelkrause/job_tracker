@@ -64,11 +64,12 @@ Resolves to `config.json` + `data/` under that directory.
 - `installer/installer.nsi` — NSIS script. `installer/build_installer.sh` builds from a Linux host.
 - `installer/resources/job-tracker-silent.vbs` — silent launcher used by the Windows shortcut.
 - `.github/workflows/build-installer.yml` — CI build of the Windows installer.
-- `.github/workflows/pages.yml` — deploys `docs/` to GitHub Pages.
+- `.github/workflows/docs.yml` — builds and deploys the MkDocs site to GitHub Pages.
 
 **Docs:**
-- `docs/` — GitHub Pages site (pt-BR at root, English under `docs/en/`).
-- `wiki/` — GitHub Wiki source (pt-BR + `-EN.md` variants for each page).
+- `docs-src/` — MkDocs Material source (bilingual via mkdocs-static-i18n, default pt-BR).
+- Published at https://rafaelkrause.github.io/job_tracker/ by `.github/workflows/docs.yml`.
+- Local preview: `mkdocs serve`.
 - `README.md` — project overview.
 
 ## Key API endpoints
