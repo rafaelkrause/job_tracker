@@ -120,4 +120,14 @@ GET    /api/revision                   monotonic counter; clients poll to detect
 
 ## Language
 
-User-facing strings are in Brazilian Portuguese (pt-BR). Public docs are bilingual (pt-BR default, EN variants under `docs/en/` and `wiki/*-EN.md`).
+- **Codebase**: English only (identifiers, comments, docstrings, logs, tests).
+- **Application UI**: bilingual EN + pt-BR via Flask-Babel. Default locale `pt_BR`. Locale resolution: `jt-lang` cookie → `Accept-Language` header → default.
+- **Documentation**: bilingual (pt-BR default, EN variants under `docs/en/` and `wiki/*-EN.md`).
+
+Translation workflow:
+- Extract: `pybabel extract -F app/i18n/babel.cfg -o app/i18n/messages.pot .`
+- Update catalogs: `pybabel update -i app/i18n/messages.pot -d app/i18n`
+- Compile: `pybabel compile -d app/i18n`
+- Add a new language: `pybabel init -i app/i18n/messages.pot -d app/i18n -l <code>`
+
+Note: `.mo` files are generated (not committed) and must be compiled before packaging or running the app.
