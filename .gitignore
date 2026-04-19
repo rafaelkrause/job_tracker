@@ -16,7 +16,7 @@ env/
 ENV/
 
 # User data (monthly activity JSON files)
-data/
+/data/
 
 # User configuration (auto-generated on first run)
 config.json
