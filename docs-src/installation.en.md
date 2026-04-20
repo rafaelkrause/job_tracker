@@ -6,55 +6,104 @@ Complete installation guide for Job Tracker on Linux, macOS and Windows.
 
 | System | Requirements |
 |---|---|
-| Linux / macOS | Python 3.10+, `pip`, `git`, `bash` |
+| Linux / macOS | Python 3.10+, `curl`, `bash` |
 | Windows (installer) | None — bundled Python |
 | Windows (manual) | Python 3.10+ |
-| Optional | `pystray` + `Pillow` for the tray icon |
+| Optional | `pystray` + `Pillow` (tray icon, included by default in the remote script) |
 
-## Linux / macOS — script
+## Linux / macOS — quick install (remote)
 
-The recommended way is to run `install.sh`:
+Recommended for most users. Downloads the published `.whl` from GitHub Releases, installs it inside an isolated virtualenv, and drops a `job-tracker` launcher on `PATH`.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/rafaelkrause/job_tracker/main/install-remote.sh | bash
+```
+
+Then:
+
+```bash
+job-tracker              # opens the browser at http://localhost:5000
+job-tracker --no-browser # start the server only
+```
+
+### What gets created
+
+| Path | Content |
+|---|---|
+| `~/.local/share/job-tracker/.venv/` | Isolated Python environment |
+| `~/.local/share/job-tracker/user/` | `config.json` + `data/YYYY-MM.json` (your data) |
+| `~/.local/bin/job-tracker` | Launcher on `PATH` |
+| `~/.local/share/applications/job-tracker.desktop` | App-menu entry (Linux) |
+
+If `~/.local/bin` is not on your `PATH`, the script warns you and prints the line to add to `~/.bashrc` or `~/.zshrc`.
+
+### Options (environment variables)
+
+```bash
+# Pin a specific version (default: latest release)
+JT_VERSION=0.1.0 curl -fsSL .../install-remote.sh | bash
+
+# Skip tray support (pystray + Pillow)
+JT_NO_TRAY=1 curl -fsSL .../install-remote.sh | bash
+
+# Custom install prefix
+JT_PREFIX=/opt/job-tracker curl -fsSL .../install-remote.sh | bash
+```
+
+### Autostart (optional)
+
+The `--service` flag registers Job Tracker with the OS-native service manager:
+
+- **Linux:** `systemd --user` unit at `~/.config/systemd/user/job-tracker.service`, enabled automatically. Starts at login.
+- **macOS:** a `LaunchAgent` at `~/Library/LaunchAgents/com.rafaelkrause.jobtracker.plist`, loaded via `launchctl`. Starts at login.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/rafaelkrause/job_tracker/main/install-remote.sh | bash -s -- --service
+```
+
+To enable autostart on an existing installation (without reinstalling), just re-run the command above — the script detects the existing install and only adds the service.
+
+### Uninstall
+
+```bash
+# Keeps your data at ~/.local/share/job-tracker/user/
+curl -fsSL https://raw.githubusercontent.com/rafaelkrause/job_tracker/main/install-remote.sh | bash -s -- --uninstall
+
+# Also wipes user data (irreversible)
+curl -fsSL https://raw.githubusercontent.com/rafaelkrause/job_tracker/main/install-remote.sh | bash -s -- --uninstall --purge-data
+```
+
+The uninstaller stops and removes the service (if present), then deletes the launcher, menu entry and virtualenv. If you download the script instead of using `curl | bash`, running it interactively (`bash install-remote.sh --uninstall`) prompts before removing your data.
+
+### Note on macOS (v0.1.0)
+
+Windows ships a double-click `.exe` installer with a common-user experience; delivering the same level on macOS would require:
+
+- Packaging as a `.app` via `py2app` or PyInstaller.
+- An **Apple Developer account (US$99/year)** to code-sign the bundle.
+- Going through Apple **notarization** — without it, Gatekeeper blocks the app as "unidentified developer".
+
+Without that investment, any homemade `.app` triggers scary warnings. v0.1.0 therefore uses the `curl | bash` path documented above, which works with what macOS already ships (Python from Homebrew or python.org, `launchd` for autostart). It is the same pattern used by Homebrew, oh-my-zsh and Rust/rustup.
+
+## Linux / macOS — from source (contributors)
+
+To develop or modify the project:
 
 ```bash
 git clone https://github.com/rafaelkrause/job_tracker.git
 cd job_tracker
-./install.sh
+./install.sh            # creates .venv and installs dependencies
+./job-tracker.sh        # run
 ```
 
-The script:
-
-1. Checks that Python 3.10+ is available.
-2. Creates a virtual environment at `.venv/`.
-3. Installs dependencies from `requirements.txt`.
-4. Optionally installs `pystray` + `Pillow`.
-5. Creates a `.desktop` shortcut if a graphical environment is detected.
-
-Then run:
+Manual alternative:
 
 ```bash
-./job-tracker.sh
-# or
-python3 run.py
-```
-
-## Linux / macOS — manual
-
-```bash
-git clone https://github.com/rafaelkrause/job_tracker.git
-cd job_tracker
-
 python3 -m venv .venv
 source .venv/bin/activate
-
-pip install -r requirements.txt
-
-# optional: tray support
-pip install pystray Pillow
-
+pip install -e ".[dev,tray]"   # editable install + dev tooling
 python3 run.py
 ```
-
-Use `python3 run.py --no-browser` to skip auto-opening the browser.
 
 ## Windows — NSIS installer
 
@@ -84,7 +133,7 @@ pip install -r requirements.txt
 python run.py
 ```
 
-## Build the installer from source
+## Build the Windows installer from source
 
 Only needed if you want to customize the Windows installer. Runs on a Linux host:
 
@@ -96,48 +145,13 @@ sudo apt install nsis
 
 The workflow `.github/workflows/build-installer.yml` does this automatically when a `v*` tag is pushed.
 
-## Run at startup
-
-### Linux — systemd (user unit)
-
-Create `~/.config/systemd/user/job-tracker.service`:
-
-```ini
-[Unit]
-Description=Job Tracker
-After=network.target
-
-[Service]
-Type=simple
-WorkingDirectory=%h/job_tracker
-ExecStart=%h/job_tracker/.venv/bin/python run.py --no-browser
-Restart=on-failure
-
-[Install]
-WantedBy=default.target
-```
-
-```bash
-systemctl --user daemon-reload
-systemctl --user enable --now job-tracker.service
-```
-
-### macOS — launchd
-
-Create `~/Library/LaunchAgents/com.user.jobtracker.plist` with `<ProgramArguments>` pointing to `python` and `run.py`. Load with `launchctl load`.
-
-### Windows — service via NSSM
-
-The official installer offers this option. For manual installs, use [NSSM](https://nssm.cc/):
-
-```powershell
-nssm install JobTracker "C:\path\job_tracker\.venv\Scripts\python.exe" run.py --no-browser
-nssm start JobTracker
-```
-
 ## Update
 
-### Linux / macOS
+### Linux / macOS — via remote script
+
+Re-run `install-remote.sh`: it detects the existing virtualenv, downloads the new version, reinstalls the wheel, and preserves your data at `~/.local/share/job-tracker/user/`.
+
+### Linux / macOS — from source
 
 ```bash
 cd job_tracker
@@ -148,10 +162,10 @@ pip install -r requirements.txt --upgrade
 
 ### Windows
 
-Run the new `JobTracker-Setup-X.Y.Z.exe`. Data and configuration in `%APPDATA%\JobTracker` are preserved.
+Run the new `JobTracker-Setup-X.Y.Z.exe`. Data and configuration under `%APPDATA%\JobTracker` are preserved.
 
 ## Uninstall
 
-- **Linux/macOS**: `rm -rf job_tracker/`. If applicable: `systemctl --user disable --now job-tracker.service`.
-- **Windows**: Control Panel → Programs → Job Tracker → Uninstall.
-- To also remove historical data: delete `data/` (Linux) or `%APPDATA%\JobTracker` (Windows).
+- **Linux/macOS (remote install):** see [Uninstall](#uninstall) above.
+- **Linux/macOS (from source):** `rm -rf job_tracker/`. If applicable: `systemctl --user disable --now job-tracker.service`.
+- **Windows:** Control Panel → Programs → Job Tracker → Uninstall.

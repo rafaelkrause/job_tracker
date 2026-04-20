@@ -36,10 +36,20 @@ A aplicação e a documentação são **bilíngues** (inglês + português do Br
 
 ## Installation
 
-### Linux / macOS
+### Linux / macOS — quick install (recommended)
 
 ```bash
-git clone https://github.com/<your-user>/job_tracker.git
+curl -fsSL https://raw.githubusercontent.com/rafaelkrause/job_tracker/main/install-remote.sh | bash
+```
+
+Downloads the latest release wheel, installs it into `~/.local/share/job-tracker/.venv`, and drops a `job-tracker` launcher on `PATH`. Add `--service` to register a `systemd --user` unit (Linux) or `LaunchAgent` (macOS) that starts the app at login.
+
+Uninstall with `bash -s -- --uninstall` (keeps data) or `--uninstall --purge-data` (wipes it). Full options and honest notes about macOS in the [installation guide](https://rafaelkrause.github.io/job_tracker/installation/).
+
+### Linux / macOS — from source (contributors)
+
+```bash
+git clone https://github.com/rafaelkrause/job_tracker.git
 cd job_tracker
 ./install.sh
 ```
