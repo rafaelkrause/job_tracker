@@ -1,0 +1,83 @@
+/* Timeline */
+.timeline-container {
+    position: relative;
+    height: 52px;
+    background: var(--bs-tertiary-bg);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.timeline-labels {
+    position: relative;
+    height: 18px;
+    margin-top: 2px;
+}
+
+.timeline-shift {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    background: var(--bs-secondary-bg);
+    border-left: 1px solid var(--bs-border-color);
+    border-right: 1px solid var(--bs-border-color);
+}
+
+.timeline-activity {
+    position: absolute;
+    top: 6px;
+    height: calc(100% - 12px);
+    border-radius: 3px;
+    opacity: 0.85;
+    min-width: 2px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+}
+
+.timeline-activity:hover {
+    opacity: 1;
+}
+
+.timeline-activity.completed {
+    background: var(--bs-primary);
+}
+
+.timeline-activity.paused {
+    background: var(--bs-warning);
+}
+
+.timeline-activity.active {
+    background: var(--bs-success);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.timeline-now {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    width: 2px;
+    background: var(--bs-danger);
+    z-index: 10;
+}
+
+.timeline-label {
+    position: absolute;
+    font-size: 0.65rem;
+    color: var(--bs-secondary-color);
+    transform: translateX(-50%);
+    top: 0;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.85; }
+    50% { opacity: 0.45; }
+}
+
+/* Percentage indicator */
+.pct-low { color: var(--bs-danger) !important; }
+.pct-mid { color: var(--bs-warning) !important; }
+.pct-high { color: var(--bs-success) !important; }
+
+/* Monospace timer */
+.font-monospace {
+    font-variant-numeric: tabular-nums;
+}
