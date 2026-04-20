@@ -56,6 +56,23 @@ function formatDateISO(d) {
     return `${y}-${m}-${day}`;
 }
 
+// Mirrors _period_range() in routes.py — week is ISO Mon–Sun.
+function periodRange(d, period) {
+    if (period === "week") {
+        const dow = (d.getDay() + 6) % 7; // 0 = Monday
+        const start = new Date(d.getFullYear(), d.getMonth(), d.getDate() - dow);
+        const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 6);
+        return [formatDateISO(start), formatDateISO(end)];
+    }
+    if (period === "month") {
+        const start = new Date(d.getFullYear(), d.getMonth(), 1);
+        const end = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+        return [formatDateISO(start), formatDateISO(end)];
+    }
+    const iso = formatDateISO(d);
+    return [iso, iso];
+}
+
 function formatTime(isoStr) {
     if (!isoStr) return "—";
     const d = new Date(isoStr);
@@ -609,8 +626,30 @@ async function deleteActivity() {
 // ── Export ─────────────────────────────────────────────────────────────
 
 function exportData(format) {
-    const dateStr = formatDateISO(currentDate);
-    window.open(`/api/export?from=${dateStr}&to=${dateStr}&format=${format}`);
+    const [from, to] = periodRange(currentDate, currentPeriod);
+    window.open(`/api/export?from=${from}&to=${to}&format=${format}`);
+}
+
+function openExportModal() {
+    const [from, to] = periodRange(currentDate, currentPeriod);
+    const fromInput = document.getElementById("export-from");
+    const toInput = document.getElementById("export-to");
+    if (fromInput) fromInput.value = from;
+    if (toInput) toInput.value = to;
+    const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById("exportModal"));
+    modal.show();
+}
+
+function exportCustomRange() {
+    const from = document.getElementById("export-from")?.value;
+    const to = document.getElementById("export-to")?.value;
+    const format = document.getElementById("export-format")?.value || "csv";
+    if (!from || !to) {
+        showToast(window.i18n.pick_dates, "warning");
+        return;
+    }
+    window.open(`/api/export?from=${from}&to=${to}&format=${format}`);
+    bootstrap.Modal.getInstance(document.getElementById("exportModal"))?.hide();
 }
 
 // ── Settings ──────────────────────────────────────────────────────────
@@ -700,17 +739,6 @@ async function saveGeneral() {
     showToast(window.i18n.settings_saved);
 }
 
-function exportFromSettings() {
-    const from = document.getElementById("export-from")?.value;
-    const to = document.getElementById("export-to")?.value;
-    const format = document.getElementById("export-format")?.value || "csv";
-    if (!from || !to) {
-        showToast(window.i18n.pick_dates, "warning");
-        return;
-    }
-    window.open(`/api/export?from=${from}&to=${to}&format=${format}`);
-}
-
 // ── Toast ─────────────────────────────────────────────────────────────
 
 function showToast(message, type = "success", duration = 2500) {
@@ -759,13 +787,4 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 30000);
     }
 
-    // Settings page: set default export dates to current month
-    const exportFrom = document.getElementById("export-from");
-    const exportTo = document.getElementById("export-to");
-    if (exportFrom && exportTo) {
-        const now = new Date();
-        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-        exportFrom.value = formatDateISO(firstDay);
-        exportTo.value = formatDateISO(now);
-    }
 });

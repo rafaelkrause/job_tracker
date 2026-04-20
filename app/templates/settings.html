@@ -52,35 +52,6 @@
     </div>
 </div>
 
-<!-- Export -->
-<div class="card mb-3">
-    <div class="card-header py-2"><small class="fw-semibold">{{ _('Export Data') }}</small></div>
-    <div class="card-body">
-        <div class="row g-2 align-items-end">
-            <div class="col-auto">
-                <label class="form-label small">{{ _('From') }}</label>
-                <input type="date" class="form-control form-control-sm" id="export-from">
-            </div>
-            <div class="col-auto">
-                <label class="form-label small">{{ _('To') }}</label>
-                <input type="date" class="form-control form-control-sm" id="export-to">
-            </div>
-            <div class="col-auto">
-                <label class="form-label small">{{ _('Format') }}</label>
-                <select class="form-select form-select-sm" id="export-format">
-                    <option value="csv">CSV</option>
-                    <option value="tsv">{{ _('TSV (Tab)') }}</option>
-                </select>
-            </div>
-            <div class="col-auto">
-                <button class="btn btn-primary btn-sm" onclick="exportFromSettings()">
-                    <i class="bi bi-download"></i> {{ _('Export') }}
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
 {% endblock %}
 {% block scripts %}
 <script>document.addEventListener('DOMContentLoaded', loadShifts);</script>
