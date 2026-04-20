@@ -29,7 +29,7 @@ Windows: NSIS installer (`installer/build_installer.sh X.Y.Z` → `JobTracker-Se
 ## Stack
 
 - **Backend:** Flask 3.0+ (no ORM, no database)
-- **Frontend:** Bootstrap 5.3 (CDN) + vanilla JS
+- **Frontend:** hand-written design system (shadcn/ui-inspired tokens) + vanilla JS, no CDN, no build step
 - **Persistence:** JSON files partitioned by month (`data/YYYY-MM.json`)
 - **Config:** `config.json` in the user data dir
 - **Tray:** optional `pystray` + `Pillow` (graceful fallback if absent)
@@ -56,9 +56,10 @@ Resolves to `config.json` + `data/` under that directory.
 - `app/data/phrases.json` — bundled micro-reward phrases served by `/api/phrase/<category>`.
 
 **Frontend:** Single-page-like.
-- `app/templates/` — `base.html`, `dashboard.html`, `settings.html`, `focus.html` (opened by tray to focus/re-open the dashboard tab).
-- `app/static/js/app.js` — polling (current activity every 30s + revision check for cross-client sync), local-increment timer, timeline rendering, theme toggle (localStorage key `jt-theme`).
-- `app/static/css/style.css`.
+- `app/templates/` — `base.html`, `dashboard.html`, `settings.html`, `focus.html` (opened by tray to focus/re-open the dashboard tab), `_icons.html` (Jinja macro for inline SVG icons).
+- `app/templates/icons/` — vendored Lucide SVGs included via `{% from "_icons.html" import icon %}{{ icon('name') }}`.
+- `app/static/css/app.css` — single-file design system: tokens (`:root` and `.dark`), components (`.btn`, `.card`, `.dialog`, `.dropdown`, `.toast`, `.table`, `.input`, `.badge`, `.progress`, `.navbar`), minimal utilities.
+- `app/static/js/app.js` — polling (current activity every 30s + revision check for cross-client sync), local-increment timer, timeline rendering, theme toggle (localStorage key `jt-theme`, applies `.dark` class on `<html>`). Native `<dialog>` for modals via `openDialog()`/`closeDialog()` helpers.
 
 **Installer / packaging:**
 - `installer/installer.nsi` — NSIS script. `installer/build_installer.sh` builds from a Linux host.
@@ -111,6 +112,7 @@ GET    /api/revision                   monotonic counter; clients poll to detect
 - Data files older than 12 months are pruned on startup.
 - `_state_revision` is a monotonic in-process counter, bumped by every state-changing action (start/pause/resume/stop/edit/delete). Browser tabs poll `/api/revision` to detect changes made by other tabs or the tray.
 - `/focus` endpoint lets the tray click re-focus an already-open tab instead of opening a new one.
+- UI uses a hand-written design system inspired by shadcn/ui (HSL CSS variables for tokens, BEM-ish component classes). No Bootstrap, no Tailwind, no Node. Single CSS file (~18 KB) + inline SVG icons.
 
 ## Data safety
 

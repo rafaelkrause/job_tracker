@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- UI: migrated from Bootstrap 5.3 to a hand-written design system inspired by shadcn/ui.
+  - Single CSS file (`app/static/css/app.css`, ~18 KB) replaces Bootstrap CSS/JS bundles previously loaded from CDNs.
+  - Inline Lucide SVG icons (via `_icons.html` Jinja macro) replace the Bootstrap Icons font.
+  - Native `<dialog>` element replaces Bootstrap Modal JS; custom dropdown and toast helpers replace their Bootstrap counterparts.
+  - No new dependencies, no build step, no CDN — fully offline-capable.
+
 ## [0.1.0] - 2026-04-19
 
 ### English
