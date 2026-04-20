@@ -46,17 +46,24 @@ Via the UI or `PUT /api/activity/<id>` (description, start/end time) and `DELETE
 - Request body: up to 64 KB
 - Time format: `HH:MM` (24h), server-validated
 
-## Daily dashboard
+## Dashboard
 
-The dashboard shows:
+The dashboard has three modes, chosen via the **Day / Week / Month** selector next to the date navigation:
 
-- **Day timeline** — each activity placed at its real start/end time. The range is derived from the day's shift + 30 min padding on each side.
+- **Day** (default) — timeline, today's shift, and the day's activities.
+- **Week** — Monday through Sunday of the selected date. Chevrons jump ±7 days.
+- **Month** — calendar month of the selected date. Chevrons jump ±1 month.
+
+The chosen mode is remembered across sessions (localStorage `jt-period`); the date resets to today on each reload.
+
+What the dashboard shows:
+
+- **Timeline** (Day only) — each activity placed at its real start/end time. The range is derived from the day's shift + 30 min padding on each side.
 - **Current activity** — description and timer. The frontend increments the counter locally between polls (30s) to feel instant.
-- **Shift progress bar** — only counts hours already elapsed in the current day. Future hours do not drag progress down.
-- **Target** — how much of your target (% of the shift) has been logged.
-- **Day summary** — total logged and chronological list of completed activities.
-
-Use the date picker to navigate to previous days.
+- **Tracked hours** (`Tracked`) — effective sum of activities in the period (excluding pauses).
+- **Shift** — in Day mode, how much of today's shift has elapsed; in Week/Month, the total configured shift hours for the period.
+- **Target** — percentage of tracked over **elapsed** shift time (past days count fully, today counts up to now, future days count 0). This rule prevents future hours from dragging progress down.
+- **Activity table** — chronological order. In Week/Month a **Date** column is shown.
 
 ## Shifts
 
@@ -78,7 +85,7 @@ Edit via UI under **Configurações → Turnos** or directly in `config.json`.
 
 ## System tray
 
-With `pystray` and `Pillow` installed, a tray icon appears with:
+A tray icon appears with:
 
 - Pause / Resume
 - Stop
@@ -87,11 +94,11 @@ With `pystray` and `Pillow` installed, a tray icon appears with:
 
 Tray actions talk to Flask over local HTTP — the same API the UI uses.
 
-On pure GNOME desktops, the **AppIndicator** extension is required.
+On pure GNOME desktops, the **AppIndicator** extension is required. On headless servers (no window manager) the app detects the missing tray and just runs the web server.
 
-## Export to iClips
+## Export
 
-iClips has no public API. Export is formatted for **manual paste** into the right field.
+Spreadsheet format (CSV/TSV) for pasting into external time-entry systems that don't expose a public API.
 
 - **UI**: **Exportar** (Export) page → pick date range + format (CSV/TSV) → Download.
 - **API**: `GET /api/export?from=YYYY-MM-DD&to=YYYY-MM-DD&format=tsv`.
@@ -115,7 +122,7 @@ Writes are **atomic**: temp file → `fsync` → `os.replace()`. Safe against cr
 
 - Keep a browser tab open on the dashboard.
 - Use the tray to pause quickly without switching windows.
-- Short, consistent descriptions make weekly iClips logging easier.
+- Short, consistent descriptions make weekly logging into your spreadsheet / external system easier.
 - Set up a system keyboard shortcut to focus the Job Tracker tab.
 - When running as a service (`systemd` / NSSM), use `--no-browser`.
 - For backup, periodically copy the `data/` folder. It's plain JSON.

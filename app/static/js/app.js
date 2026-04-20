@@ -1,6 +1,12 @@
 // ── State ──────────────────────────────────────────────────────────────
 
+const VALID_PERIODS = ["day", "week", "month"];
+
 let currentDate = new Date();
+let currentPeriod = (() => {
+    const stored = localStorage.getItem("jt-period");
+    return VALID_PERIODS.includes(stored) ? stored : "day";
+})();
 let timerInterval = null;
 
 // ── Cross-tab sync via BroadcastChannel ───────────────────────────────
@@ -79,7 +85,7 @@ async function api(url, method = "GET", body = null) {
 // ── Theme ─────────────────────────────────────────────────────────────
 
 function initTheme() {
-    const saved = localStorage.getItem("jt-theme") || "auto";
+    const saved = localStorage.getItem("jt-theme") || window.jtServerTheme || "auto";
     applyTheme(saved);
 }
 
@@ -237,8 +243,31 @@ async function showPhrase(category) {
 
 // ── Dashboard ─────────────────────────────────────────────────────────
 
+function changePeriod(period) {
+    if (!VALID_PERIODS.includes(period)) return;
+    currentPeriod = period;
+    localStorage.setItem("jt-period", period);
+    updatePeriodButtons();
+    updateDateDisplay();
+    refreshDashboard();
+}
+
+function updatePeriodButtons() {
+    for (const p of VALID_PERIODS) {
+        const btn = document.getElementById(`period-${p}`);
+        if (btn) btn.classList.toggle("active", p === currentPeriod);
+    }
+}
+
 function changeDate(delta) {
-    currentDate.setDate(currentDate.getDate() + delta);
+    if (currentPeriod === "week") {
+        currentDate.setDate(currentDate.getDate() + 7 * delta);
+    } else if (currentPeriod === "month") {
+        currentDate.setDate(1);
+        currentDate.setMonth(currentDate.getMonth() + delta);
+    } else {
+        currentDate.setDate(currentDate.getDate() + delta);
+    }
     updateDateDisplay();
     refreshDashboard();
 }
@@ -249,15 +278,41 @@ function goToday() {
     refreshDashboard();
 }
 
+function weekRange(d) {
+    // Monday (ISO) through Sunday — weekday(): 0=Sun ... 1=Mon in JS
+    const day = d.getDay(); // 0=Sun ... 6=Sat
+    const diffToMonday = (day + 6) % 7;
+    const start = new Date(d);
+    start.setDate(d.getDate() - diffToMonday);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    return { start, end };
+}
+
 function updateDateDisplay() {
     const el = document.getElementById("date-display");
     if (!el) return;
+    const lang = window.currentLang || "pt-BR";
+
+    if (currentPeriod === "week") {
+        const { start, end } = weekRange(currentDate);
+        const startStr = start.toLocaleDateString(lang, { day: "2-digit", month: "short" });
+        const endStr = end.toLocaleDateString(lang, { day: "2-digit", month: "short" });
+        el.textContent = `${startStr} \u2013 ${endStr}`;
+        return;
+    }
+
+    if (currentPeriod === "month") {
+        el.textContent = currentDate.toLocaleDateString(lang, { month: "long", year: "numeric" });
+        return;
+    }
+
     const todayStr = formatDateISO(new Date());
     const currentStr = formatDateISO(currentDate);
     if (currentStr === todayStr) {
         el.textContent = window.i18n.today;
     } else {
-        el.textContent = currentDate.toLocaleDateString(window.currentLang || "pt-BR", {
+        el.textContent = currentDate.toLocaleDateString(lang, {
             weekday: "short", day: "2-digit", month: "2-digit",
         });
     }
@@ -265,7 +320,7 @@ function updateDateDisplay() {
 
 async function refreshDashboard() {
     const dateStr = formatDateISO(currentDate);
-    const data = await api(`/api/dashboard?date=${dateStr}`);
+    const data = await api(`/api/dashboard?date=${dateStr}&period=${currentPeriod}`);
 
     // Stats
     const trackedEl = document.getElementById("tracked-time");
@@ -274,7 +329,13 @@ async function refreshDashboard() {
     const bar = document.getElementById("progress-bar");
 
     if (trackedEl) trackedEl.textContent = formatDuration(data.tracked_seconds);
-    if (shiftEl) shiftEl.textContent = formatDuration(data.elapsed_shift_seconds);
+    if (shiftEl) {
+        // Day: show elapsed-so-far (matches the "%-of-elapsed" percentage).
+        // Week/Month: show total shift hours for the period (what the user asked for).
+        shiftEl.textContent = formatDuration(
+            currentPeriod === "day" ? data.elapsed_shift_seconds : data.total_shift_seconds
+        );
+    }
 
     if (pctEl) {
         pctEl.textContent = `${data.percentage}%`;
@@ -295,7 +356,13 @@ async function refreshDashboard() {
         );
     }
 
-    // Shift info
+    // Timeline card is day-only
+    const timelineCard = document.getElementById("timeline-card");
+    if (timelineCard) {
+        timelineCard.style.display = currentPeriod === "day" ? "" : "none";
+    }
+
+    // Shift info (day mode only — shown in timeline card header)
     const shiftInfo = document.getElementById("shift-info");
     if (shiftInfo) {
         shiftInfo.textContent = data.shifts.length > 0
@@ -303,7 +370,9 @@ async function refreshDashboard() {
             : window.i18n.no_shift;
     }
 
-    renderTimeline(data);
+    if (currentPeriod === "day") {
+        renderTimeline(data);
+    }
     renderActivityTable(data.activities);
 }
 
@@ -405,8 +474,13 @@ function renderActivityTable(activities) {
     const tbody = document.getElementById("activity-table");
     if (!tbody) return;
 
+    const showDateCol = currentPeriod !== "day";
+    const colDateHeader = document.getElementById("col-date");
+    if (colDateHeader) colDateHeader.style.display = showDateCol ? "" : "none";
+    const colspan = showDateCol ? 7 : 6;
+
     if (activities.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-body-secondary py-3">${escapeHtml(window.i18n.no_activities)}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center text-body-secondary py-3">${escapeHtml(window.i18n.no_activities)}</td></tr>`;
         return;
     }
 
@@ -416,10 +490,16 @@ function renderActivityTable(activities) {
         active:    { label: window.i18n.active,    cls: "bg-success" },
     };
 
+    const lang = window.currentLang || "pt-BR";
+
     tbody.innerHTML = activities.map(a => {
         const st = statusMap[a.status] || statusMap.completed;
+        const dateCell = showDateCol
+            ? `<td class="text-body-secondary small">${new Date(a.started_at).toLocaleDateString(lang, { day: "2-digit", month: "2-digit" })}</td>`
+            : "";
         return `<tr>
-            <td>${escapeHtml(a.description)}</td>
+            ${dateCell}
+            <td class="cell-description">${escapeHtml(a.description)}</td>
             <td>${formatTime(a.started_at)}</td>
             <td>${a.ended_at ? formatTime(a.ended_at) : "\u2014"}</td>
             <td class="font-monospace">${a.effective_duration}</td>
@@ -439,7 +519,7 @@ function renderActivityTable(activities) {
     for (const btn of tbody.querySelectorAll(".btn-edit")) {
         const id = btn.dataset.id;
         const row = btn.closest("tr");
-        const description = row.querySelector("td").textContent;
+        const description = row.querySelector(".cell-description").textContent;
         btn.addEventListener("click", () => {
             openEditModal(id, description, btn.dataset.started, btn.dataset.ended, btn.dataset.status);
         });
@@ -664,6 +744,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Dashboard page
     if (document.getElementById("current-activity")) {
+        updatePeriodButtons();
         updateDateDisplay();
         refreshCurrentActivity();
         refreshDashboard();

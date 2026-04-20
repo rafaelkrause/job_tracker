@@ -109,21 +109,33 @@ Parâmetros:
 
 Retorna array de atividades (ordem cronológica).
 
-### `GET /api/dashboard?date=YYYY-MM-DD`
+### `GET /api/dashboard?date=YYYY-MM-DD[&period=day|week|month]`
 
-Dados agregados de um dia. `date` default: hoje.
+Dados agregados para um dia, semana ou mês. Defaults: `date` = hoje, `period` = `day`.
+
+Parâmetros:
+
+- `date` — data-âncora (ISO `YYYY-MM-DD`). Em `week` e `month` serve apenas para identificar qual semana/mês.
+- `period` — granularidade da agregação:
+    - `day` (padrão): apenas o dia.
+    - `week`: segunda a domingo (ISO) contendo `date`.
+    - `month`: mês calendário de `date`.
+
+Regra de `elapsed_shift_seconds`: dias passados contam o turno inteiro; o dia atual conta até `now`; dias futuros contam zero. `shifts` e `day_name` só são preenchidos no modo `day` (a timeline horária é renderizada apenas nesse modo).
 
 ```json
 {
-  "date": "2026-04-19",
-  "activities": [ /* lista de atividades do dia */ ],
-  "current": { /* atividade atual ou null */ },
-  "shift": {
-    "blocks": [{"start": "09:00", "end": "12:00"}, {"start": "13:00", "end": "18:00"}],
-    "total_minutes": 480,
-    "elapsed_minutes": 210
-  },
-  "total_logged_minutes": 185,
+  "date": "2026-04-20",
+  "period": "week",
+  "from_date": "2026-04-20",
+  "to_date": "2026-04-26",
+  "day_name": null,
+  "activities": [ /* atividades do intervalo (ordem cronológica) */ ],
+  "shifts": [],
+  "total_shift_seconds": 104400,
+  "elapsed_shift_seconds": 21780,
+  "tracked_seconds": 14400,
+  "percentage": 66.1,
   "target_percentage": 90
 }
 ```

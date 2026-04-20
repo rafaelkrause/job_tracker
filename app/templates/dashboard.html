@@ -41,16 +41,23 @@
     </div>
 </div>
 
-<!-- Date Nav + Stats -->
+<!-- Period + Date Nav + Stats -->
 <div class="d-flex flex-wrap align-items-center justify-content-between mb-3 gap-2">
-    <div class="btn-group btn-group-sm">
-        <button class="btn btn-outline-secondary" onclick="changeDate(-1)">
-            <i class="bi bi-chevron-left"></i>
-        </button>
-        <button class="btn btn-outline-secondary" id="date-display" onclick="goToday()" style="min-width:120px;"></button>
-        <button class="btn btn-outline-secondary" onclick="changeDate(1)">
-            <i class="bi bi-chevron-right"></i>
-        </button>
+    <div class="d-flex flex-wrap align-items-center gap-2">
+        <div class="btn-group btn-group-sm" role="group" aria-label="{{ _('Period') }}">
+            <button type="button" class="btn btn-outline-secondary" id="period-day" onclick="changePeriod('day')">{{ _('Day') }}</button>
+            <button type="button" class="btn btn-outline-secondary" id="period-week" onclick="changePeriod('week')">{{ _('Week') }}</button>
+            <button type="button" class="btn btn-outline-secondary" id="period-month" onclick="changePeriod('month')">{{ _('Month') }}</button>
+        </div>
+        <div class="btn-group btn-group-sm">
+            <button class="btn btn-outline-secondary" onclick="changeDate(-1)">
+                <i class="bi bi-chevron-left"></i>
+            </button>
+            <button class="btn btn-outline-secondary" id="date-display" onclick="goToday()" style="min-width:160px;"></button>
+            <button class="btn btn-outline-secondary" onclick="changeDate(1)">
+                <i class="bi bi-chevron-right"></i>
+            </button>
+        </div>
     </div>
 
     <div class="d-flex align-items-center gap-4">
@@ -74,8 +81,8 @@
     <div class="progress-bar" id="progress-bar" role="progressbar" style="width: 0%"></div>
 </div>
 
-<!-- Timeline -->
-<div class="card mb-3">
+<!-- Timeline (day only) -->
+<div class="card mb-3" id="timeline-card">
     <div class="card-header py-2 d-flex justify-content-between align-items-center">
         <small class="fw-semibold">{{ _('Timeline') }}</small>
         <small class="text-body-secondary" id="shift-info"></small>
@@ -103,6 +110,7 @@
         <table class="table table-hover table-sm mb-0 align-middle">
             <thead>
                 <tr>
+                    <th id="col-date" style="width:80px; display:none">{{ _('Date') }}</th>
                     <th>{{ _('Description') }}</th>
                     <th style="width:70px">{{ _('Start') }}</th>
                     <th style="width:70px">{{ _('End') }}</th>
@@ -112,7 +120,7 @@
                 </tr>
             </thead>
             <tbody id="activity-table">
-                <tr><td colspan="6" class="text-center text-body-secondary py-3">{{ _('Loading...') }}</td></tr>
+                <tr><td colspan="7" class="text-center text-body-secondary py-3">{{ _('Loading...') }}</td></tr>
             </tbody>
         </table>
     </div>

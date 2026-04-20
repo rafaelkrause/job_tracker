@@ -1,8 +1,9 @@
+import calendar
 import io
 import json
 import random
 import re
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 from flask import (
@@ -53,6 +54,56 @@ def _parse_date(s: str) -> date | None:
         return None
 
 
+VALID_PERIODS = {"day", "week", "month"}
+
+
+def _period_range(dt: date, period: str) -> tuple[date, date]:
+    """Return (from_date, to_date) inclusive for the anchor date + period.
+
+    Week = Monday through Sunday (ISO).
+    """
+    if period == "week":
+        start = dt - timedelta(days=dt.weekday())
+        return start, start + timedelta(days=6)
+    if period == "month":
+        last_day = calendar.monthrange(dt.year, dt.month)[1]
+        return dt.replace(day=1), dt.replace(day=last_day)
+    return dt, dt
+
+
+def _compute_shift_seconds(shifts_config: dict, from_date: date, to_date: date) -> tuple[int, int]:
+    """Sum total and elapsed shift seconds across the range.
+
+    Past days count fully; today counts up to now; future days count 0.
+    Empty shift lists (weekends) contribute zero — correct by construction.
+    """
+    now = datetime.now()
+    today = date.today()
+    now_minutes = now.hour * 60 + now.minute
+
+    total = 0
+    elapsed = 0
+    current = from_date
+    while current <= to_date:
+        day_name = current.strftime("%A").lower()
+        for shift in shifts_config.get(day_name, []):
+            sp = shift["start"].split(":")
+            ep = shift["end"].split(":")
+            shift_start_min = int(sp[0]) * 60 + int(sp[1])
+            shift_end_min = int(ep[0]) * 60 + int(ep[1])
+            shift_duration = (shift_end_min - shift_start_min) * 60
+            total += shift_duration
+            if current < today:
+                elapsed += shift_duration
+            elif current == today:
+                if now_minutes >= shift_end_min:
+                    elapsed += shift_duration
+                elif now_minutes >= shift_start_min:
+                    elapsed += (now_minutes - shift_start_min) * 60
+        current += timedelta(days=1)
+    return total, elapsed
+
+
 # Monotonic counter bumped on every state-changing action (start/pause/resume/stop).
 # Browser tabs poll this to detect changes made from other sources (tray, other tabs).
 _state_revision = 0
@@ -71,17 +122,23 @@ def get_config() -> dict:
     return current_app.config["APP_CONFIG"]
 
 
+@bp.context_processor
+def inject_theme() -> dict:
+    """Make the user's theme preference available to every template.
+
+    Consumed by ``base.html`` to set ``data-bs-theme`` before paint and
+    by ``app.js`` as the fallback when no ``jt-theme`` localStorage entry
+    exists yet.
+    """
+    return {"theme": get_config().get("theme", "auto")}
+
+
 # ── Pages ──────────────────────────────────────────────────────────────
 
 
 @bp.route("/")
 def dashboard():
-    config = get_config()
-    return render_template(
-        "dashboard.html",
-        theme=config.get("theme", "auto"),
-        user_name=config.get("user_name", ""),
-    )
+    return render_template("dashboard.html", user_name=get_config().get("user_name", ""))
 
 
 @bp.route("/focus")
@@ -92,8 +149,7 @@ def focus():
 
 @bp.route("/settings")
 def settings():
-    config = get_config()
-    return render_template("settings.html", theme=config.get("theme", "auto"), config=config)
+    return render_template("settings.html", config=get_config())
 
 
 # ── Activity API ───────────────────────────────────────────────────────
@@ -351,38 +407,28 @@ def dashboard_data():
     if not dt:
         return jsonify({"error": _("Invalid date")}), 400
 
+    period = request.args.get("period", "day")
+    if period not in VALID_PERIODS:
+        return jsonify({"error": _("Invalid period")}), 400
+
     storage = get_storage()
     config = get_config()
+    shifts_config = config.get("shifts", {})
 
-    activities = storage.get_activities_for_date(dt)
+    from_date, to_date = _period_range(dt, period)
 
-    day_name = dt.strftime("%A").lower()
-    shifts = config.get("shifts", {}).get(day_name, [])
+    if period == "day":
+        activities = storage.get_activities_for_date(dt)
+        day_name = dt.strftime("%A").lower()
+        shifts = shifts_config.get(day_name, [])
+    else:
+        activities = storage.get_activities_range(from_date, to_date)
+        day_name = None
+        shifts = []
 
-    # Calculate shift time using minutes to avoid timezone issues
-    now = datetime.now()
-    today = date.today()
-    now_minutes = now.hour * 60 + now.minute
-
-    total_shift_seconds = 0
-    elapsed_shift_seconds = 0
-
-    for shift in shifts:
-        sp = shift["start"].split(":")
-        ep = shift["end"].split(":")
-        shift_start_min = int(sp[0]) * 60 + int(sp[1])
-        shift_end_min = int(ep[0]) * 60 + int(ep[1])
-        shift_duration = (shift_end_min - shift_start_min) * 60
-
-        total_shift_seconds += shift_duration
-
-        if dt == today:
-            if now_minutes >= shift_end_min:
-                elapsed_shift_seconds += shift_duration
-            elif now_minutes >= shift_start_min:
-                elapsed_shift_seconds += (now_minutes - shift_start_min) * 60
-        elif dt < today:
-            elapsed_shift_seconds += shift_duration
+    total_shift_seconds, elapsed_shift_seconds = _compute_shift_seconds(
+        shifts_config, from_date, to_date
+    )
 
     tracked_seconds = sum(a.effective_duration_seconds() for a in activities)
 
@@ -392,6 +438,9 @@ def dashboard_data():
     return jsonify(
         {
             "date": dt.isoformat(),
+            "period": period,
+            "from_date": from_date.isoformat(),
+            "to_date": to_date.isoformat(),
             "day_name": day_name,
             "activities": [
                 {

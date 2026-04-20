@@ -43,17 +43,24 @@ Pela UI ou via `PUT /api/activity/<id>` (descrição, horário de início/fim) e
 - Corpo de requisição: até 64 KB
 - Horários: formato `HH:MM` (24h), validado no servidor
 
-## Dashboard diário
+## Dashboard
 
-O dashboard mostra:
+O dashboard tem três modos, escolhidos pelo seletor **Dia / Semana / Mês** ao lado da navegação de data:
 
-- **Timeline do dia** — cada atividade posicionada no horário real de início/fim. A faixa exibida é derivada do turno + 30 min de padding em cada extremo.
+- **Dia** (padrão) — timeline, turno do dia e atividades do dia.
+- **Semana** — segunda a domingo da data selecionada. Os chevrons navegam ±7 dias.
+- **Mês** — mês calendário da data selecionada. Os chevrons navegam ±1 mês.
+
+O modo escolhido fica salvo entre sessões (localStorage `jt-period`); a data volta para hoje a cada reload.
+
+O que o dashboard mostra:
+
+- **Timeline** (apenas no modo Dia) — cada atividade posicionada no horário real de início/fim. A faixa exibida é derivada do turno + 30 min de padding em cada extremo.
 - **Atividade atual** — descrição e cronômetro. O front-end incrementa o contador localmente entre polls (30s) para parecer instantâneo.
-- **Barra de progresso do turno** — só conta horas já passadas no dia corrente. Horas futuras não puxam o progresso pra baixo.
-- **Meta** — quanto da sua meta (% do turno) já foi apontada.
-- **Resumo do dia** — total apontado e lista cronológica de atividades finalizadas.
-
-Use o seletor de data para navegar dias anteriores.
+- **Horas apontadas** (`Tracked`) — soma efetiva das atividades no período (descontando pausas).
+- **Turno** (`Shift`) — no modo Dia, quanto do turno de hoje já passou; em Semana/Mês, o total de horas de turno configuradas no período.
+- **Meta** (`Target`) — percentual apontado sobre o turno **já decorrido** (past days contam inteiros, hoje conta até agora, futuro conta 0). Essa regra evita que horas futuras puxem o progresso pra baixo.
+- **Tabela de atividades** — ordem cronológica. Em Semana/Mês ganha uma coluna **Data**.
 
 ## Turnos
 
@@ -75,7 +82,7 @@ Edite pela UI em **Configurações → Turnos** ou direto no `config.json`.
 
 ## Bandeja do sistema
 
-Com `pystray` e `Pillow` instalados, um ícone aparece na bandeja com:
+Um ícone aparece na bandeja com:
 
 - Pausar / Retomar
 - Parar
@@ -84,11 +91,11 @@ Com `pystray` e `Pillow` instalados, um ícone aparece na bandeja com:
 
 As ações conversam com o Flask via HTTP local — é a mesma API da UI.
 
-Em instalações Linux com GNOME puro, é preciso a extensão **AppIndicator**.
+Em instalações Linux com GNOME puro, é preciso a extensão **AppIndicator**. Em servidores sem gerenciador de janelas, o app detecta a ausência do tray e roda só o servidor web.
 
-## Exportação para iClips
+## Exportação
 
-O iClips não tem API pública. A exportação é formatada para **colar manualmente** no campo correto.
+Formato planilha (CSV/TSV) para colar em sistemas externos de apontamento que não têm API pública.
 
 - **UI**: página **Exportar** → escolha intervalo de datas + formato CSV/TSV → Download.
 - **API**: `GET /api/export?from=YYYY-MM-DD&to=YYYY-MM-DD&format=tsv`.
@@ -112,7 +119,7 @@ Escritas são **atômicas**: arquivo temporário → `fsync` → `os.replace()`.
 
 - Deixe uma aba do navegador aberta no dashboard.
 - Use a bandeja para pausar rapidamente sem trocar de janela.
-- Descrições curtas e consistentes facilitam o apontamento semanal no iClips.
+- Descrições curtas e consistentes facilitam o apontamento semanal na sua planilha / sistema externo.
 - Configure um atalho de teclado do sistema para focar a aba do Job Tracker.
 - Ao rodar como serviço (`systemd` / NSSM), use `--no-browser`.
 - Para backup, copie periodicamente a pasta `data/`. É só JSON.

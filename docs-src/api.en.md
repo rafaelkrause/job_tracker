@@ -109,21 +109,33 @@ Query parameters:
 
 Returns array of activities (chronological).
 
-### `GET /api/dashboard?date=YYYY-MM-DD`
+### `GET /api/dashboard?date=YYYY-MM-DD[&period=day|week|month]`
 
-Aggregated data for a day. `date` defaults to today.
+Aggregated data for a day, week, or month. Defaults: `date` = today, `period` = `day`.
+
+Parameters:
+
+- `date` — anchor date (ISO `YYYY-MM-DD`). In `week` and `month` it just identifies which week/month.
+- `period` — aggregation granularity:
+    - `day` (default): single day.
+    - `week`: Monday through Sunday (ISO) containing `date`.
+    - `month`: calendar month of `date`.
+
+`elapsed_shift_seconds` rule: past days count their full shift; today counts up to `now`; future days count zero. `shifts` and `day_name` are only populated in `day` mode (the hourly timeline renders only in that mode).
 
 ```json
 {
-  "date": "2026-04-19",
-  "activities": [ /* day's activities */ ],
-  "current": { /* current activity or null */ },
-  "shift": {
-    "blocks": [{"start": "09:00", "end": "12:00"}, {"start": "13:00", "end": "18:00"}],
-    "total_minutes": 480,
-    "elapsed_minutes": 210
-  },
-  "total_logged_minutes": 185,
+  "date": "2026-04-20",
+  "period": "week",
+  "from_date": "2026-04-20",
+  "to_date": "2026-04-26",
+  "day_name": null,
+  "activities": [ /* activities in the range (chronological) */ ],
+  "shifts": [],
+  "total_shift_seconds": 104400,
+  "elapsed_shift_seconds": 21780,
+  "tracked_seconds": 14400,
+  "percentage": 66.1,
   "target_percentage": 90
 }
 ```

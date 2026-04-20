@@ -4,18 +4,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Internal hour-tracking tool for a marketing agency professional. Runs as a background process serving a local web UI at `localhost:5000`. Designed for single-user, low-footprint operation on Linux and Windows. Data exports are formatted for manual paste into iClips (no API available). UI is pt-BR.
+Internal hour-tracking tool for a marketing agency professional. Runs as a background process serving a local web UI at `localhost:5000`. Designed for single-user, low-footprint operation on Linux, macOS and Windows. Data exports (CSV/TSV) are formatted for manual paste into spreadsheets or external time-entry systems that have no public API. UI is bilingual (pt-BR default + EN).
 
 ## Running
 
 ```bash
 # Dev (Linux/macOS)
-pip install -r requirements.txt
-python3 run.py                  # opens browser
-python3 run.py --no-browser     # headless
-
-# Optional system tray
-pip install pystray Pillow
+pip install -r requirements.txt    # flask + flask-babel + pystray + Pillow
+python3 run.py                     # opens browser
+python3 run.py --no-browser        # headless
 
 # Helper script
 ./job-tracker.sh
@@ -32,12 +29,12 @@ Windows: NSIS installer (`installer/build_installer.sh X.Y.Z` → `JobTracker-Se
 - **Frontend:** Bootstrap 5.3 (CDN) + vanilla JS
 - **Persistence:** JSON files partitioned by month (`data/YYYY-MM.json`)
 - **Config:** `config.json` in the user data dir
-- **Tray:** optional `pystray` + `Pillow` (graceful fallback if absent)
+- **Tray:** `pystray` + `Pillow` (required). Graceful fallback on headless systems with no window manager — Flask runs in the foreground.
 - **Python:** 3.10+
 
 ## Architecture
 
-**Entry point:** `run.py` — starts Flask server. If pystray is available, Flask runs in a daemon thread and pystray owns the main thread. Otherwise Flask runs in the main thread and the browser is auto-opened (unless `--no-browser`).
+**Entry point:** `run.py` — starts Flask server. `pystray` owns the main thread and Flask runs in a daemon thread. On headless systems where the tray cannot attach (no window manager), Flask runs in the main thread and the browser is auto-opened (unless `--no-browser`).
 
 **User data dir resolution (`app/__init__.py::get_user_data_dir`):**
 1. `$JOBTRACKER_DATA_DIR` (set by the Windows installer / service wrapper)
@@ -52,7 +49,7 @@ Resolves to `config.json` + `data/` under that directory.
 - `app/config.py` — loads/saves `config.json` with defaults (shifts, target %, port, theme, user_name, phrases_enabled).
 - `app/routes.py` — all Flask routes. REST API under `/api/`, HTML pages at `/`, `/focus`, `/settings`. Holds the in-process `_state_revision` counter.
 - `app/export.py` — CSV/TSV export. Only exports completed activities.
-- `app/tray.py` — optional system tray; pause/resume/stop via HTTP to the local Flask server.
+- `app/tray.py` — system tray; pause/resume/stop via HTTP to the local Flask server.
 - `app/data/phrases.json` — bundled micro-reward phrases served by `/api/phrase/<category>`.
 
 **Frontend:** Single-page-like.
@@ -62,7 +59,7 @@ Resolves to `config.json` + `data/` under that directory.
 
 **Installer / packaging:**
 - `installer/installer.nsi` — NSIS script. `installer/build_installer.sh` builds from a Linux host.
-- `installer/resources/job-tracker-silent.vbs` — silent launcher used by the Windows shortcut.
+- Windows shortcuts target the bundled `python\pythonw.exe` directly (no launcher script) — `pythonw.exe` runs windowless and is signed by Python Software Foundation.
 - `.github/workflows/build-installer.yml` — CI build of the Windows installer.
 - `.github/workflows/docs.yml` — builds and deploys the MkDocs site to GitHub Pages.
 
@@ -89,7 +86,7 @@ DELETE /api/activity/<id>
 
 GET    /api/activities?date=YYYY-MM-DD
 GET    /api/activities?from=YYYY-MM-DD&to=YYYY-MM-DD
-GET    /api/dashboard?date=YYYY-MM-DD
+GET    /api/dashboard?date=YYYY-MM-DD[&period=day|week|month]
 GET    /api/export?from=...&to=...&format=csv|tsv   (max range: 1 year)
 
 GET    /api/config
@@ -104,7 +101,8 @@ GET    /api/revision                   monotonic counter; clients poll to detect
 ## Design decisions
 
 - Starting a new activity auto-finalizes the current one (no blocking prompts).
-- Shift-elapsed % only counts time already passed in the current day (doesn't penalize future hours).
+- Shift-elapsed % only counts time already passed (doesn't penalize future hours). Applies per-day and also across week/month ranges (past days count fully, today counts up to now, future days count 0).
+- Dashboard supports `period=day|week|month` aggregations. Week = Monday–Sunday (ISO). Month = calendar month of `date`. Timeline renders only in day mode.
 - Dashboard timeline range is derived from the day's shift config with 30 min padding.
 - All timestamps stored as ISO 8601 with timezone offset. Effective duration = wall-clock − pause intervals.
 - Monthly JSON partitioning keeps files small and hand-inspectable.

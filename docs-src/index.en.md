@@ -16,16 +16,25 @@ Lightweight, local hour-tracking tool built for agency professionals. Runs as a 
 | [Troubleshooting](troubleshooting.md) | Common install and runtime errors. |
 | [Contributing](contributing.md) | How to propose changes and open PRs. |
 | [Language policy](language.md) | Why pt-BR + EN, and how to contribute translations. |
+| [Credits](credits.md) | Libraries, fonts, icons, phrases, and other third-party components. |
 
 ## Highlights
 
 - `active → paused → active → completed` state machine; paused time is subtracted from total duration.
-- Daily dashboard with timeline, shift-aware progress bar, and target percentage.
+- Dashboard with day / week / month modes, timeline (day), shift-aware progress bar, and target percentage.
 - Monthly JSON file storage (no ORM, no database).
 - Configurable per-weekday shifts with multiple blocks (e.g. lunch break).
-- CSV/TSV export for manual paste into iClips.
-- Optional system tray via `pystray`.
+- CSV/TSV export for manual paste into spreadsheets or external time-tracking tools.
+- System tray with pause / resume / stop.
 - Auto-opens the browser on startup (disable with `--no-browser`).
+
+## Screenshots
+
+![Dashboard](assets/screenshots/dashboard.png)
+*Daily dashboard — current activity, timeline, shift progress and target.*
+
+![Settings](assets/screenshots/settings.png)
+*Settings — shifts per weekday, theme, target percentage and preferences.*
 
 ## Quick links
 

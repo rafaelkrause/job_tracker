@@ -16,16 +16,25 @@ Ferramenta leve e local de rastreamento de horas, pensada para profissionais de 
 | [Solução de problemas](troubleshooting.md) | Erros comuns de instalação e execução. |
 | [Contribuindo](contributing.md) | Como propor mudanças e abrir PRs. |
 | [Política de idioma](language.md) | Por que pt-BR + EN, e como contribuir com traduções. |
+| [Créditos](credits.md) | Bibliotecas, fontes, ícones, frases e demais componentes de terceiros. |
 
 ## Principais características
 
 - Fluxo `active → paused → active → completed`; pausas são subtraídas do tempo total.
-- Dashboard diário com timeline, progresso do turno e meta.
+- Dashboard com modos Dia, Semana e Mês, timeline (Dia), progresso do turno e meta.
 - Armazenamento em arquivos JSON mensais (sem ORM, sem banco).
 - Turnos por dia da semana configuráveis, com múltiplos blocos (intervalo de almoço, por exemplo).
-- Exportação CSV/TSV para colar no iClips.
-- Bandeja do sistema opcional via `pystray`.
+- Exportação CSV/TSV para colar em planilhas e ferramentas externas de apontamento.
+- Bandeja do sistema com pausar / retomar / finalizar.
 - Abre o navegador automaticamente ao iniciar (desativável com `--no-browser`).
+
+## Capturas de tela
+
+![Dashboard](assets/screenshots/dashboard.png)
+*Dashboard diário — atividade em curso, timeline, progresso do turno e meta.*
+
+![Configurações](assets/screenshots/settings.png)
+*Configurações — turnos por dia da semana, tema, meta e preferências.*
 
 ## Links rápidos
 
