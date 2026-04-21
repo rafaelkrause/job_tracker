@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "timetrack"
-version = "0.1.0"
+version = "0.1.1"
 description = "Self-hosted hour-tracking tool with local web UI. Bilingual (EN/pt-BR)."
 readme = "README.md"
 license = { text = "MIT" }

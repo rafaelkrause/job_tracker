@@ -240,6 +240,13 @@ PY
     "$PIP" install --quiet "$WHL_URL"
     ok "TimeTrack $REL_TAG installed"
 
+    # ---- Compat shim: the v0.1.0 wheel shipped the entry point as `job-tracker`;
+    # later releases renamed it to `timetrack`. Symlink whichever is missing so
+    # the launcher below (which calls `timetrack`) works on both.
+    if [ -x "$VENV_DIR/bin/job-tracker" ] && [ ! -e "$VENV_DIR/bin/timetrack" ]; then
+        ln -sf job-tracker "$VENV_DIR/bin/timetrack"
+    fi
+
     # ---- Launcher on PATH
     cat > "$LAUNCHER" <<EOF
 #!/usr/bin/env bash

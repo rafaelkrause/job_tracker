@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-04-21
+
+### English
+
+#### Fixed
+- Remote installer (`install-remote.sh`) failed on Linux/macOS because the
+  v0.1.0 wheel exposed the console script as `job-tracker` while the
+  launcher invoked `timetrack`. The wheel now ships the `timetrack` entry
+  point, and the installer creates a compatibility symlink when only the
+  legacy name is present.
+
+### Português
+
+#### Corrigido
+- O instalador remoto (`install-remote.sh`) falhava no Linux/macOS porque
+  o wheel v0.1.0 expunha o console script como `job-tracker` enquanto o
+  launcher chamava `timetrack`. O wheel agora traz o entry point
+  `timetrack`, e o instalador cria um symlink de compatibilidade quando
+  apenas o nome antigo está presente.
+
 ## [0.1.0] - 2026-04-19
 
 ### English
@@ -85,5 +105,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   estrita por campo (tamanho de descrição, formato de horário, faixa de
   porta, faixa de meta, enum de tema, limite de intervalo de exportação).
 
-[Unreleased]: https://github.com/rafaelkrause/TimeTrack/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/rafaelkrause/TimeTrack/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/rafaelkrause/TimeTrack/releases/tag/v0.1.1
 [0.1.0]: https://github.com/rafaelkrause/TimeTrack/releases/tag/v0.1.0
