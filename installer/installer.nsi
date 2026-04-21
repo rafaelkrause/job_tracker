@@ -62,7 +62,7 @@ VIAddVersionKey "LegalCopyright"  "© ${APP_PUBLISHER}"
 !define MUI_UNICON "${BUILD_DIR}\resources\timetrack.ico"
 !define MUI_ABORTWARNING
 !define MUI_FINISHPAGE_RUN           "$INSTDIR\${APP_LAUNCH_EXE}"
-!define MUI_FINISHPAGE_RUN_PARAMETERS "${APP_LAUNCH_ARGS}"
+!define MUI_FINISHPAGE_RUN_PARAMETERS '${APP_LAUNCH_ARGS}'
 !define MUI_FINISHPAGE_RUN_TEXT      "Iniciar o TimeTrack"
 !define MUI_FINISHPAGE_LINK          "Abrir no navegador"
 !define MUI_FINISHPAGE_LINK_LOCATION "http://127.0.0.1:5000"
@@ -183,13 +183,13 @@ SectionEnd
 Section "Atalho na Área de Trabalho" SecDesktop
   ; SetOutPath defines the shortcut's WorkingDir — run.py must resolve from $INSTDIR\app.
   SetOutPath "$INSTDIR\app"
-  CreateShortCut "$DESKTOP\${APP_NAME}.lnk" "$INSTDIR\${APP_LAUNCH_EXE}" "${APP_LAUNCH_ARGS}" "$INSTDIR\timetrack.ico" 0 SW_SHOWMINIMIZED
+  CreateShortCut "$DESKTOP\${APP_NAME}.lnk" "$INSTDIR\${APP_LAUNCH_EXE}" '${APP_LAUNCH_ARGS}' "$INSTDIR\timetrack.ico" 0 SW_SHOWMINIMIZED
 SectionEnd
 
 Section "Atalho no Menu Iniciar" SecStartMenu
   CreateDirectory "$SMPROGRAMS\${APP_NAME}"
   SetOutPath "$INSTDIR\app"
-  CreateShortCut "$SMPROGRAMS\${APP_NAME}\${APP_NAME}.lnk" "$INSTDIR\${APP_LAUNCH_EXE}" "${APP_LAUNCH_ARGS}" "$INSTDIR\timetrack.ico" 0 SW_SHOWMINIMIZED
+  CreateShortCut "$SMPROGRAMS\${APP_NAME}\${APP_NAME}.lnk" "$INSTDIR\${APP_LAUNCH_EXE}" '${APP_LAUNCH_ARGS}' "$INSTDIR\timetrack.ico" 0 SW_SHOWMINIMIZED
   CreateShortCut "$SMPROGRAMS\${APP_NAME}\Abrir no navegador.lnk" "http://127.0.0.1:5000" "" "$INSTDIR\timetrack.ico" 0
   CreateShortCut "$SMPROGRAMS\${APP_NAME}\Desinstalar.lnk" "$INSTDIR\Uninstall.exe"
 SectionEnd
