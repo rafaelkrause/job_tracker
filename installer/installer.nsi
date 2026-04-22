@@ -151,22 +151,26 @@ Section "!TimeTrack (obrigatório)" SecCore
     Abort "pip bootstrap failed"
   ${EndIf}
 
-  DetailPrint "Instalando Flask, pystray, Pillow..."
-  nsExec::ExecToLog '"$INSTDIR\python\python.exe" -m pip install --no-warn-script-location --no-index --find-links "$INSTDIR\wheels" flask pystray Pillow'
+  DetailPrint "Instalando dependências..."
+  ; Drive from requirements.txt (shipped at $INSTDIR\app\requirements.txt) so
+  ; this can't drift from what the app actually needs at runtime.
+  nsExec::ExecToLog '"$INSTDIR\python\python.exe" -m pip install --no-warn-script-location --no-index --find-links "$INSTDIR\wheels" -r "$INSTDIR\app\requirements.txt"'
   Pop $0
   ${If} $0 <> 0
-    MessageBox MB_OK|MB_ICONSTOP "Falha ao instalar as dependências (Flask/pystray/Pillow — código $0).$\n$\nVerifique os detalhes acima. A instalação será cancelada."
+    MessageBox MB_OK|MB_ICONSTOP "Falha ao instalar as dependências (código $0).$\n$\nVerifique os detalhes acima. A instalação será cancelada."
     Abort "dependency install failed"
   ${EndIf}
 
   ; Smoke test — confirm the embedded Python can import every required module.
-  ; Catches the failure mode we saw in the wild: pip reports success but wheels
-  ; are for the wrong ABI/platform, or the embeddable's `._pth` is misconfigured.
+  ; Catches failure modes we saw in the wild: pip reports success but wheels
+  ; are for the wrong ABI/platform, or a transitive dep is missing from the
+  ; offline bundle. Covers every package in requirements.txt plus flask_babel
+  ; (enabled by default for the pt-BR/EN UI).
   DetailPrint "Verificando dependências..."
-  nsExec::ExecToLog '"$INSTDIR\python\python.exe" -c "import flask, pystray, PIL"'
+  nsExec::ExecToLog '"$INSTDIR\python\python.exe" -c "import flask, flask_babel, pystray, PIL"'
   Pop $0
   ${If} $0 <> 0
-    MessageBox MB_OK|MB_ICONSTOP "As dependências (Flask/pystray/Pillow) não puderam ser importadas (código $0).$\n$\nA instalação das wheels falhou silenciosamente. Verifique os detalhes acima."
+    MessageBox MB_OK|MB_ICONSTOP "Uma ou mais dependências não puderam ser importadas (código $0).$\n$\nA instalação das wheels falhou silenciosamente. Verifique os detalhes acima."
     Abort "dependency smoke test failed"
   ${EndIf}
 

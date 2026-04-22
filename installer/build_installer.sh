@@ -70,9 +70,17 @@ mkdir -p "$BUILD_DIR/wheels"
 cp "$GETPIP" "$BUILD_DIR/wheels/get-pip.py"
 
 # ------------------------------------------------------------------ wheels (Windows)
-log "Downloading Windows wheels (flask, pystray, Pillow)..."
-# We download wheels targeting CPython 3.11 on win_amd64. --only-binary=:all:
-# forces wheels (no source); pure-python packages still resolve fine.
+log "Downloading Windows wheels from requirements.txt..."
+# Drive the wheel download from requirements.txt so packaging can't drift from
+# runtime deps. We download targeting CPython 3.11 on win_amd64.
+# --only-binary=:all: forces wheels (no source); pure-python packages still
+# resolve as universal wheels.
+#
+# `colorama` is added explicitly: it's a transitive dep of `click` declared as
+# `colorama; platform_system == "Windows"`, and `pip download --platform
+# win_amd64` on a Linux host does NOT reliably evaluate platform-conditional
+# markers on transitive deps. Without this the Windows install aborts with
+# "No matching distribution found for colorama".
 python3 -m pip download \
     --dest "$BUILD_DIR/wheels" \
     --platform win_amd64 \
@@ -80,11 +88,9 @@ python3 -m pip download \
     --implementation cp \
     --abi cp311 \
     --only-binary=:all: \
-    flask pystray Pillow pip setuptools wheel \
+    -r "$REPO_ROOT/requirements.txt" \
+    pip setuptools wheel colorama \
   >/dev/null
-
-# Some pure-python deps (click, itsdangerous, werkzeug, jinja2, blinker,
-# markupsafe, six) come through as universal wheels — already covered by pip.
 
 # ------------------------------------------------------------------ NSSM
 NSSM_ZIP="$CACHE_DIR/nssm-${NSSM_VER}.zip"
