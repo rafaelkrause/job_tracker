@@ -13,7 +13,11 @@
 ; =============================================================================
 
 Unicode true
-SetCompressor /SOLID lzma
+; Non-solid LZMA. Solid-mode installers share a strong fingerprint with
+; malware packers (UPX-like compressed blobs of unsigned PEs), which amplifies
+; ML-based heuristic detections such as Wacatac.C!ml. Per-file LZMA is still
+; compact (22 MB for our payload) and significantly less flagged.
+SetCompressor lzma
 
 !ifndef APP_VERSION
   !define APP_VERSION "0.0.0-dev"
@@ -44,12 +48,15 @@ ShowUninstDetails show
 BrandingText "TimeTrack ${APP_VERSION}"
 
 VIProductVersion "${APP_VERSION}.0"
-VIAddVersionKey "ProductName"     "${APP_NAME}"
-VIAddVersionKey "CompanyName"     "${APP_PUBLISHER}"
-VIAddVersionKey "FileDescription" "TimeTrack Installer"
-VIAddVersionKey "FileVersion"     "${APP_VERSION}"
-VIAddVersionKey "ProductVersion"  "${APP_VERSION}"
-VIAddVersionKey "LegalCopyright"  "© ${APP_PUBLISHER}"
+VIAddVersionKey "ProductName"      "${APP_NAME}"
+VIAddVersionKey "CompanyName"      "${APP_PUBLISHER}"
+VIAddVersionKey "FileDescription"  "TimeTrack — Hour Tracking Installer"
+VIAddVersionKey "FileVersion"      "${APP_VERSION}"
+VIAddVersionKey "ProductVersion"   "${APP_VERSION}"
+VIAddVersionKey "LegalCopyright"   "© ${APP_PUBLISHER}"
+VIAddVersionKey "OriginalFilename" "TimeTrack-Setup-${APP_VERSION}.exe"
+VIAddVersionKey "InternalName"     "TimeTrackSetup"
+VIAddVersionKey "Comments"         "Local hour-tracking app — serves a web UI on localhost:5000. Source: ${APP_URL}"
 
 ; --- MUI2 -------------------------------------------------------------------
 !include "MUI2.nsh"
@@ -88,12 +95,12 @@ VIAddVersionKey "LegalCopyright"  "© ${APP_PUBLISHER}"
 LangString DESC_SecCore      ${LANG_PORTUGUESEBR} "Aplicação, Python embutido e bibliotecas (obrigatório)."
 LangString DESC_SecDesktop   ${LANG_PORTUGUESEBR} "Criar atalho na Área de Trabalho."
 LangString DESC_SecStartMenu ${LANG_PORTUGUESEBR} "Criar atalho no Menu Iniciar."
-LangString DESC_SecService   ${LANG_PORTUGUESEBR} "Rodar em segundo plano como serviço do Windows (requer privilégios de administrador)."
+LangString DESC_SecService   ${LANG_PORTUGUESEBR} "Instala os arquivos do serviço Windows. Para registrar, use o atalho 'Instalar serviço (Admin)' no Menu Iniciar."
 
 LangString DESC_SecCore      ${LANG_ENGLISH} "Application, embedded Python and libraries (required)."
 LangString DESC_SecDesktop   ${LANG_ENGLISH} "Create a Desktop shortcut."
 LangString DESC_SecStartMenu ${LANG_ENGLISH} "Create a Start Menu shortcut."
-LangString DESC_SecService   ${LANG_ENGLISH} "Run in the background as a Windows service (requires administrator)."
+LangString DESC_SecService   ${LANG_ENGLISH} "Install the Windows service files. To register, use the 'Install service (Admin)' shortcut in the Start Menu."
 
 ; =============================================================================
 ; SECTIONS
@@ -134,28 +141,54 @@ Section "!TimeTrack (obrigatório)" SecCore
   File "${BUILD_DIR}\resources\LICENSE.txt"
 
   ; ----- pip bootstrap + install dependencies -------------------------------
+  ; Fail loudly instead of silently: a broken install is worse than an aborted
+  ; one, because the user ends up with shortcuts that launch a non-working app.
   DetailPrint "Instalando pip..."
   nsExec::ExecToLog '"$INSTDIR\python\python.exe" "$INSTDIR\wheels\get-pip.py" --no-warn-script-location --no-index --find-links "$INSTDIR\wheels"'
   Pop $0
   ${If} $0 <> 0
-    DetailPrint "AVISO: pip retornou código $0"
+    MessageBox MB_OK|MB_ICONSTOP "Falha ao instalar o pip (código $0).$\n$\nVerifique os detalhes acima. A instalação será cancelada."
+    Abort "pip bootstrap failed"
   ${EndIf}
 
   DetailPrint "Instalando Flask, pystray, Pillow..."
   nsExec::ExecToLog '"$INSTDIR\python\python.exe" -m pip install --no-warn-script-location --no-index --find-links "$INSTDIR\wheels" flask pystray Pillow'
   Pop $0
   ${If} $0 <> 0
-    DetailPrint "AVISO: pip install retornou código $0"
+    MessageBox MB_OK|MB_ICONSTOP "Falha ao instalar as dependências (Flask/pystray/Pillow — código $0).$\n$\nVerifique os detalhes acima. A instalação será cancelada."
+    Abort "dependency install failed"
   ${EndIf}
 
-  ; ----- Generate timetrack.bat (console launcher) --------------------------
-  FileOpen $0 "$INSTDIR\timetrack.bat" w
-    FileWrite $0 '@echo off$\r$\n'
-    FileWrite $0 'setlocal$\r$\n'
-    FileWrite $0 'set "TIMETRACK_DATA_DIR=%APPDATA%\TimeTrack"$\r$\n'
-    FileWrite $0 'cd /d "$INSTDIR\app"$\r$\n'
-    FileWrite $0 '"$INSTDIR\python\python.exe" run.py %*$\r$\n'
-  FileClose $0
+  ; Smoke test — confirm the embedded Python can import every required module.
+  ; Catches the failure mode we saw in the wild: pip reports success but wheels
+  ; are for the wrong ABI/platform, or the embeddable's `._pth` is misconfigured.
+  DetailPrint "Verificando dependências..."
+  nsExec::ExecToLog '"$INSTDIR\python\python.exe" -c "import flask, pystray, PIL"'
+  Pop $0
+  ${If} $0 <> 0
+    MessageBox MB_OK|MB_ICONSTOP "As dependências (Flask/pystray/Pillow) não puderam ser importadas (código $0).$\n$\nA instalação das wheels falhou silenciosamente. Verifique os detalhes acima."
+    Abort "dependency smoke test failed"
+  ${EndIf}
+
+  ; Second smoke test — verify the full launch path works. This exercises the
+  ; same sys.path logic run.py uses at startup, catching `ModuleNotFoundError:
+  ; No module named 'app'` before the user ever double-clicks the shortcut.
+  ; Uses CWD rather than path-escaping tricks to avoid quoting hell.
+  DetailPrint "Verificando pacote da aplicação..."
+  SetOutPath "$INSTDIR\app"
+  nsExec::ExecToLog '"$INSTDIR\python\python.exe" -c "import os, sys; sys.path.insert(0, os.getcwd()); from app import create_app"'
+  Pop $0
+  ${If} $0 <> 0
+    MessageBox MB_OK|MB_ICONSTOP "O pacote 'app' não pôde ser carregado (código $0).$\n$\nA aplicação não iniciará corretamente. Verifique os detalhes acima."
+    Abort "app smoke test failed"
+  ${EndIf}
+  DetailPrint "OK — imports verificados."
+
+  ; ----- Console launcher ---------------------------------------------------
+  ; Pre-built batch (not generated at runtime — runtime script generation is
+  ; a common antivirus heuristic trigger). Uses %~dp0 to locate INSTDIR.
+  SetOutPath "$INSTDIR"
+  File "${BUILD_DIR}\resources\timetrack.bat"
 
   ; ----- Per-user data directory --------------------------------------------
   CreateDirectory "$APPDATA\TimeTrack"
@@ -204,46 +237,20 @@ Section /o "Rodar como serviço do Windows" SecService
   SetOutPath "$INSTDIR\nssm"
   File /r "${BUILD_DIR}\nssm\*.*"
 
-  ; Generate service helper batches (must run elevated)
-  FileOpen $0 "$INSTDIR\install-service.bat" w
-    FileWrite $0 '@echo off$\r$\n'
-    FileWrite $0 'net session >nul 2>&1$\r$\n'
-    FileWrite $0 'if %errorlevel% neq 0 ($\r$\n'
-    FileWrite $0 '  echo Este script requer privilegios de administrador.$\r$\n'
-    FileWrite $0 '  pause$\r$\n'
-    FileWrite $0 '  exit /b 1$\r$\n'
-    FileWrite $0 ')$\r$\n'
-    FileWrite $0 '"$INSTDIR\nssm\nssm.exe" install ${SERVICE_NAME} "$INSTDIR\python\pythonw.exe" "$INSTDIR\app\run.py" --no-browser$\r$\n'
-    FileWrite $0 '"$INSTDIR\nssm\nssm.exe" set ${SERVICE_NAME} AppDirectory "$INSTDIR\app"$\r$\n'
-    FileWrite $0 '"$INSTDIR\nssm\nssm.exe" set ${SERVICE_NAME} DisplayName "TimeTrack"$\r$\n'
-    FileWrite $0 '"$INSTDIR\nssm\nssm.exe" set ${SERVICE_NAME} Description "TimeTrack - hour tracking web UI (localhost:5000)"$\r$\n'
-    FileWrite $0 '"$INSTDIR\nssm\nssm.exe" set ${SERVICE_NAME} Start SERVICE_AUTO_START$\r$\n'
-    FileWrite $0 '"$INSTDIR\nssm\nssm.exe" set ${SERVICE_NAME} AppEnvironmentExtra "TIMETRACK_DATA_DIR=$APPDATA\TimeTrack"$\r$\n'
-    FileWrite $0 '"$INSTDIR\nssm\nssm.exe" set ${SERVICE_NAME} AppStdout "$APPDATA\TimeTrack\service.log"$\r$\n'
-    FileWrite $0 '"$INSTDIR\nssm\nssm.exe" set ${SERVICE_NAME} AppStderr "$APPDATA\TimeTrack\service.log"$\r$\n'
-    FileWrite $0 '"$INSTDIR\nssm\nssm.exe" set ${SERVICE_NAME} AppStdoutCreationDisposition 4$\r$\n'
-    FileWrite $0 '"$INSTDIR\nssm\nssm.exe" set ${SERVICE_NAME} AppStderrCreationDisposition 4$\r$\n'
-    FileWrite $0 '"$INSTDIR\nssm\nssm.exe" start ${SERVICE_NAME}$\r$\n'
-    FileWrite $0 'echo.$\r$\n'
-    FileWrite $0 'echo Servico instalado e iniciado.$\r$\n'
-  FileClose $0
+  ; Ship the service helper batches as pre-built files (not generated at
+  ; install time). Both trigger UAC when run — the user right-clicks them and
+  ; picks "Run as administrator". Having the installer itself elevate via
+  ; ExecShell "runas" is a strong Defender heuristic and we avoid it.
+  SetOutPath "$INSTDIR"
+  File "${BUILD_DIR}\resources\install-service.bat"
+  File "${BUILD_DIR}\resources\uninstall-service.bat"
 
-  FileOpen $0 "$INSTDIR\uninstall-service.bat" w
-    FileWrite $0 '@echo off$\r$\n'
-    FileWrite $0 'net session >nul 2>&1$\r$\n'
-    FileWrite $0 'if %errorlevel% neq 0 ($\r$\n'
-    FileWrite $0 '  echo Este script requer privilegios de administrador.$\r$\n'
-    FileWrite $0 '  pause$\r$\n'
-    FileWrite $0 '  exit /b 1$\r$\n'
-    FileWrite $0 ')$\r$\n'
-    FileWrite $0 '"$INSTDIR\nssm\nssm.exe" stop ${SERVICE_NAME} >nul 2>&1$\r$\n'
-    FileWrite $0 '"$INSTDIR\nssm\nssm.exe" remove ${SERVICE_NAME} confirm$\r$\n'
-    FileWrite $0 'echo Servico removido.$\r$\n'
-  FileClose $0
+  ; Add a Start Menu shortcut the user can right-click -> Run as administrator
+  ; to finish service setup. No auto-elevation from the installer itself.
+  CreateDirectory "$SMPROGRAMS\${APP_NAME}"
+  CreateShortCut "$SMPROGRAMS\${APP_NAME}\Instalar serviço (Admin).lnk" "$INSTDIR\install-service.bat" "" "$INSTDIR\timetrack.ico" 0
+  CreateShortCut "$SMPROGRAMS\${APP_NAME}\Remover serviço (Admin).lnk"  "$INSTDIR\uninstall-service.bat" "" "$INSTDIR\timetrack.ico" 0
 
-  ; Register the service now — requires elevation.
-  DetailPrint "Registrando serviço (UAC será solicitado)..."
-  ExecShell "runas" "$INSTDIR\install-service.bat" "" SW_HIDE
   WriteRegDWORD HKCU "${APPDATA_KEY}" "ServiceInstalled" 1
 SectionEnd
 
@@ -299,6 +306,8 @@ Section "Uninstall"
   Delete "$SMPROGRAMS\${APP_NAME}\${APP_NAME}.lnk"
   Delete "$SMPROGRAMS\${APP_NAME}\Abrir no navegador.lnk"
   Delete "$SMPROGRAMS\${APP_NAME}\Desinstalar.lnk"
+  Delete "$SMPROGRAMS\${APP_NAME}\Instalar serviço (Admin).lnk"
+  Delete "$SMPROGRAMS\${APP_NAME}\Remover serviço (Admin).lnk"
   RMDir  "$SMPROGRAMS\${APP_NAME}"
 
   ; Remove install directory

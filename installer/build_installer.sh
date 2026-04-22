@@ -122,6 +122,14 @@ log "Staging resources..."
 mkdir -p "$BUILD_DIR/resources"
 cp "$REPO_ROOT/LICENSE"                           "$BUILD_DIR/resources/LICENSE.txt"
 
+# Ship the launcher and service-management batches pre-built (not generated at
+# install time). Runtime `.bat` generation + immediate execution is a strong
+# antivirus heuristic trigger; pre-built scripts look identical to any other
+# legitimate installer payload.
+cp "$SCRIPT_DIR/resources/timetrack.bat"          "$BUILD_DIR/resources/"
+cp "$SCRIPT_DIR/resources/install-service.bat"    "$BUILD_DIR/resources/"
+cp "$SCRIPT_DIR/resources/uninstall-service.bat"  "$BUILD_DIR/resources/"
+
 # Icon — generate a minimal .ico if none exists yet.
 if [[ -f "$SCRIPT_DIR/resources/timetrack.ico" ]]; then
   cp "$SCRIPT_DIR/resources/timetrack.ico" "$BUILD_DIR/resources/"
