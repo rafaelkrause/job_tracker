@@ -1,6 +1,6 @@
 flask>=3.0
 flask-babel>=4.0
-pystray>=0.19
+pystray>=0.19.5
 Pillow>=10.0
 
 # For development, add the `[dev]` extra: pip install -e ".[dev]"
