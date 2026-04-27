@@ -71,7 +71,7 @@ jobs:
         run: ./installer/build_installer.sh "${{ steps.version.outputs.value }}"
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: TimeTrack-Setup-${{ steps.version.outputs.value }}
           path: installer/TimeTrack-Setup-${{ steps.version.outputs.value }}.exe
